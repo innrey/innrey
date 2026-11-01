@@ -1,0 +1,11 @@
+<Bindings>
+	<Binding name="FOREVERCOACH_SYNC" header="FOREVERCOACH">
+		ForeverCoach_Sync()
+	</Binding>
+	<Binding name="FOREVERCOACH_COPY">
+		ForeverCoach_Copy()
+	</Binding>
+	<Binding name="FOREVERCOACH_TOGGLE">
+		ForeverCoach_Toggle()
+	</Binding>
+</Bindings>
