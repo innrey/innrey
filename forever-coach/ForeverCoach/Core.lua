@@ -750,8 +750,8 @@ function ns.BuildText(s, history, bank)
   if gs and gs.done then
     add("Гид: пройден (%d шагов, план от %s)", gs.total, tostring(gs.at))
   elseif gs then
-    add("Гид: шаг %d/%d «%s»%s (план от %s)", gs.step, gs.total, gs.text,
-      gs.where and (", " .. gs.where) or "", tostring(gs.at))
+    add("Гид: шаг %d/%d «%s»%s%s (план от %s)", gs.step, gs.total, gs.text,
+      gs.where and (", " .. gs.where) or "", gs.cost and (", " .. gs.cost) or "", tostring(gs.at))
   end
   add("Квесты: %d, готово к сдаче: %d%s", #s.quests, s.questsReady,
     (s.questsHidden or 0) > 0 and string.format(", СКРЫТО свёрнутыми заголовками: %d", s.questsHidden) or "")
@@ -1037,6 +1037,8 @@ events:SetScript("OnEvent", function(_, ev, ...)
     Hist("D")
   elseif ev == "ZONE_CHANGED_NEW_AREA" then
     Hist("Z", GetZoneText and GetZoneText() or nil)
+  elseif ev == "HEARTHSTONE_BOUND" then
+    ns.boundAt = time()
   elseif ev == "BANKFRAME_OPENED" then
     ns.bankOpen = true
   elseif ev == "BANKFRAME_CLOSED" then

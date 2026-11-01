@@ -190,10 +190,17 @@ if LOAD_PLAN then
     { text = "Сдать Twisted Hatred", turnin = 932 },
     { text = "К причалу", map = 1439, x = 33, y = 40 },
     { text = "Получить 12 уровень", level = 12 },
+    { text = "Выполнить квест, которого нет в журнале", complete = 9999 },
+    { text = "Плыть в Штормград", zone = 1453, cost = 20000, note = "корабль у причала" },
+    { text = "Выучить булавы", learn = 198 },
+    { text = "Привязать камень", bind = true },
     { text = "Поговорить с хозяином таверны" },
   } }
   ns.GuideCheck()
   assert(char.guide.step == 2, "шаг 1 (квест уже в журнале) должен закрыться сам: " .. char.guide.step)
+  ForeverCoachPlan.guide.race = "Tauren"
+  assert(ns.GuideStatus() == nil, "гид для другой расы не показывается")
+  ForeverCoachPlan.guide.race = "NightElf"
   local pt = ns.guidePoint
   assert(pt and pt.map == 1439 and pt.x == 40 and pt.y == 50, "точка цели квеста: ближайшая из Questie")
   if MODE == "modern" then
@@ -202,7 +209,7 @@ if LOAD_PLAN then
   ns.RefreshUI()
   local shown = false
   for _, fs in ipairs(MOCK.fontstrings) do
-    if fs._text:find("Шаг 2/6:", 1, true) and fs._text:find("Убить Lord Melenas", 1, true) then shown = true end
+    if fs._text:find("Шаг 2/10:", 1, true) and fs._text:find("Убить Lord Melenas", 1, true) then shown = true end
   end
   assert(shown, "шаг гида в окне")
 
@@ -221,14 +228,30 @@ if LOAD_PLAN then
   MOCK.ticker()
   assert(char.guide.step == 5, "приход в точку: " .. char.guide.step)
 
+  -- Уровень; затем шаг по квесту, которого нет в журнале, пропускается сам
   MOCK.level = 12
   MOCK.Fire("PLAYER_LEVEL_UP", 12)
   MOCK.Flush()
-  assert(char.guide.step == 6, "уровень 12")
-  assert(char.text:find("Гид: шаг 6/6 «Поговорить с хозяином таверны»", 1, true), "гид в снимке")
+  assert(char.guide.step == 7, "уровень 12 и пропуск квеста не из журнала: " .. char.guide.step)
+  assert(char.text:find("Гид: шаг 7/10 «Плыть в Штормград», нужно 2g 0s 0c, есть 1g 23s 45c - НЕ ХВАТАЕТ", 1, true),
+    "стоимость шага в снимке")
+  assert(ns.GuideStatus().note == "корабль у причала", "заметка к шагу")
+
+  -- Прибытие в зону, изучение заклинания, привязка камня
+  MOCK.map = 1453
+  MOCK.ticker()
+  assert(char.guide.step == 8, "прибытие в Штормград")
+  MOCK.spells[198] = true
+  MOCK.ticker()
+  assert(char.guide.step == 9, "булавы изучены")
+  MOCK.ticker()
+  assert(char.guide.step == 9, "камень ещё не привязан")
+  MOCK.Fire("HEARTHSTONE_BOUND")
+  MOCK.Flush()
+  assert(char.guide.step == 10, "камень привязан")
 
   SlashCmdList.FOREVERCOACH("next")
-  assert(char.guide.step == 7 and ns.guidePoint == nil, "/fc next закрывает шаг без условия")
+  assert(char.guide.step == 11 and ns.guidePoint == nil, "/fc next закрывает шаг без условия")
   if MODE == "modern" then assert(MOCK.waypoint == nil, "стрелка убрана после конца гида") end
   assert(MOCK.chat[#MOCK.chat]:find("Гид пройден", 1, true), "сообщение о конце гида")
 end

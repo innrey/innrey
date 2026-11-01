@@ -34,18 +34,25 @@ end
 if P.guide ~= nil then
   assert(type(P.guide) == "table", "guide должен быть таблицей или nil")
   assert(type(P.guide.steps) == "table" and #P.guide.steps > 0, "guide.steps: нужен список шагов")
+  for _, k in ipairs({ "char", "race", "class" }) do
+    assert(P.guide[k] == nil or type(P.guide[k]) == "string", "guide." .. k .. " должно быть строкой")
+  end
+  local CONDS = { "accept", "complete", "turnin", "level", "zone", "learn", "bind" }
   for i, st in ipairs(P.guide.steps) do
     local w = "guide.steps[" .. i .. "]"
     assert(type(st) == "table", w .. " не таблица")
     assert(type(st.text) == "string" and st.text ~= "", w .. ".text: нужен текст")
-    for _, k in ipairs({ "accept", "complete", "turnin", "level", "npc", "object", "map", "x", "y", "radius" }) do
+    for _, k in ipairs({ "accept", "complete", "turnin", "level", "zone", "learn", "npc", "object", "map", "x", "y",
+      "radius", "cost" }) do
       assert(st[k] == nil or type(st[k]) == "number", w .. "." .. k .. " должно быть числом")
     end
+    assert(st.bind == nil or st.bind == true, w .. ".bind: только true")
+    assert(st.note == nil or type(st.note) == "string", w .. ".note: строка")
     assert((st.map == nil) == (st.x == nil) and (st.x == nil) == (st.y == nil), w .. ": map, x, y задаются вместе")
     if st.x then assert(st.x >= 0 and st.x <= 100 and st.y >= 0 and st.y <= 100, w .. ": x, y от 0 до 100") end
     local conds = 0
-    for _, k in ipairs({ "accept", "complete", "turnin", "level" }) do if st[k] then conds = conds + 1 end end
-    assert(conds <= 1, w .. ": больше одного условия (accept/complete/turnin/level)")
+    for _, k in ipairs(CONDS) do if st[k] then conds = conds + 1 end end
+    assert(conds <= 1, w .. ": больше одного условия (" .. table.concat(CONDS, "/") .. ")")
   end
 end
 assert(type(P.route) == "table" and #P.route > 0, "route пустой")

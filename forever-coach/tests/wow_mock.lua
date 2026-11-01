@@ -101,9 +101,9 @@ function GetMoney() return 12345 end
 function UnitIsDeadOrGhost() return false end
 function GetZoneText() return "Darkshore" end
 function GetSubZoneText() return "Auberdine" end
-MOCK.px, MOCK.py = 0.3651, 0.4521
+MOCK.px, MOCK.py, MOCK.map = 0.3651, 0.4521, 1439
 C_Map = {
-  GetBestMapForUnit = function() return 1439 end,
+  GetBestMapForUnit = function() return MOCK.map end,
   GetPlayerMapPosition = function() return { GetXY = function() return MOCK.px, MOCK.py end } end,
 }
 
@@ -132,7 +132,8 @@ QuestieLoader = {
 }
 function GetItemCount(id) return id == 6948 and 1 or 0 end
 function GetBindLocation() return "Auberdine" end
-function IsPlayerSpell(id) return id == 18960 end
+MOCK.spells = { [18960] = true }
+function IsPlayerSpell(id) return MOCK.spells[id] or false end
 function GetSpellCooldown() return 0, 0, 1 end
 function UnitCharacterPoints() return 1 end
 function GetInventoryItemDurability(slot)

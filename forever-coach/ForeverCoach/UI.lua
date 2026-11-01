@@ -122,6 +122,8 @@ function ns.RefreshUI()
   elseif gs then
     L[#L + 1] = Color("ffd100", string.format("Шаг %d/%d: ", gs.step, gs.total)) .. gs.text
     if gs.where then L[#L + 1] = "   " .. gs.where end
+    if gs.note then L[#L + 1] = Color("aaaaaa", "   " .. tostring(gs.note)) end
+    if gs.cost then L[#L + 1] = "   " .. Color(gs.short and "ff5555" or "aaaaaa", gs.cost) end
   end
 
   local hs = s.hsHave and ns.Clock(s.hsCD) or "нет в сумках"

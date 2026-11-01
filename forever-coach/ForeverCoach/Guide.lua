@@ -13,6 +13,8 @@ local function Guide()
   local g = P and P.guide
   if type(g) ~= "table" or type(g.steps) ~= "table" or #g.steps == 0 then return nil end
   if g.char and g.char ~= UnitName("player") then return nil end
+  if g.race and g.race ~= select(2, UnitRace("player")) then return nil end
+  if g.class and g.class ~= select(2, UnitClass("player")) then return nil end
   return g
 end
 
@@ -42,15 +44,38 @@ local function QuestTurnedIn(id)
   return (f and f(id)) and true or false
 end
 
--- true/false по журналу квестов и уровню; nil - условие только приход в точку или /fc next
+-- Квеста нет в журнале и он не сдан: игрок его не брал или бросил - шаги по нему пропускаем.
+-- Пока в журнале есть свёрнутые заголовки, список неполный - тогда не пропускаем.
+local function QuestMissing(id)
+  local s = ns.state
+  return s and (s.questsHidden or 0) == 0 and not QuestInLog(id) and not QuestTurnedIn(id)
+end
+
+local function KnowsSpell(id)
+  if IsPlayerSpell and IsPlayerSpell(id) then return true end
+  return (IsSpellKnown and IsSpellKnown(id)) and true or false
+end
+
+local function CurrentMap()
+  return C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
+end
+
+-- true/false по журналу квестов, уровню, зоне, камню, заклинаниям; nil - только приход в точку или /fc next
 local function StepDone(st)
-  if st.turnin then return QuestTurnedIn(st.turnin) end
+  if st.turnin then return QuestTurnedIn(st.turnin) or QuestMissing(st.turnin) end
   if st.complete then
     local q = QuestInLog(st.complete)
-    return (q and q.done) and true or QuestTurnedIn(st.complete)
+    return (q and q.done) and true or QuestTurnedIn(st.complete) or QuestMissing(st.complete)
   end
   if st.accept then return QuestInLog(st.accept) ~= nil or QuestTurnedIn(st.accept) end
   if st.level then return (UnitLevel("player") or 0) >= st.level end
+  if st.zone then return CurrentMap() == st.zone end
+  if st.learn then return KnowsSpell(st.learn) end
+  if st.bind then
+    -- камень привязан после начала шага (событие) или место привязки сменилось
+    return (ns.boundAt or 0) >= (ns.guideStarted or math.huge)
+      or (ns.guideBind ~= nil and GetBindLocation and GetBindLocation() ~= ns.guideBind)
+  end
   return nil
 end
 
@@ -194,6 +219,8 @@ end
 local function Activate(g, p)
   local st = g.steps[p.step]
   ns.guideTries = 0
+  ns.guideStarted = time()
+  ns.guideBind = GetBindLocation and GetBindLocation() or nil
   ns.guidePoint = st and Point(st) or nil
   SetArrow(ns.guidePoint, st and st.text)
 end
@@ -292,10 +319,17 @@ function ns.GuideStatus()
     if dir then parts[#parts + 1] = "на " .. dir end
     if not d and not dir then parts[#parts + 1] = string.format("карта %s: %.1f, %.1f", point.map, point.x, point.y) end
     gs.point = point
-  elseif st.npc or st.object or st.accept or st.turnin or st.complete or st.map then
+  elseif (st.npc or st.object or st.accept or st.turnin or st.complete) and not (NpcDB and QuestDB) then
     parts[#parts + 1] = "точка не найдена: нужен Questie или координаты от Claude"
   end
   if gs.objective then table.insert(parts, 1, gs.objective) end
   gs.where = #parts > 0 and table.concat(parts, ", ") or nil
+  gs.note = st.note
+  if st.cost then
+    local money = GetMoney and GetMoney() or 0
+    gs.cost = string.format("нужно %s, есть %s%s", ns.Money(st.cost), ns.Money(money),
+      money < st.cost and " - НЕ ХВАТАЕТ" or "")
+    gs.short = money < st.cost
+  end
   return gs
 end

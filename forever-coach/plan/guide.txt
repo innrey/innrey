@@ -1,0 +1,627 @@
+@guide race=NightElf class=DRUID at=1-30 v1 (02.11)
+# Гид 1-30: ночной эльф, друид, соло, WoW Forever. Подробности и логика маршрута - plan/route.md.
+# Собирается в ForeverCoach/Plan.lua: python tools/build_guide.py (ID проверяются по базе Questie).
+# Квесты без своего текста получают «Возьми / Выполни / Сдай <название>». Цены обучения - по Classic (оценка).
+
+# ===== Тенистая долина 1-6 =====
+accept 456
+accept 458
+turnin 458
+accept 459
+accept 97977
+complete 456
+turnin 456
+accept 457
+accept 3120
+turnin 3120 | Сдай Verdant Sigil тренеру Mardant Strongoak
+accept 4495
+turnin 4495
+accept 3519
+turnin 3519
+accept 3521
+complete 457
+turnin 457
+accept 916
+complete 459
+complete 97977
+complete 3521
+complete 916
+turnin 459
+turnin 97977
+turnin 3521
+accept 3522 || Отнеси противоядие Iverron сразу: часть квеста на время
+turnin 916
+accept 917
+learn 8921 npc="Mardant Strongoak" cost=2s | Обучение 4 ур.: Лунный огонь, Омоложение
+turnin 3522
+complete 917 || Яйцо в глубине пещеры Shadowthread
+accept 97236 | Убей Githyiss the Vile в пещере и возьми квест с клыка
+turnin 917
+turnin 97236
+accept 920
+turnin 920
+accept 921
+complete 921 || Наполни фиал у лунного колодца Тенистой долины
+turnin 921
+accept 96630 | Возьми The Adventurer с Lost Journal на вершине Aldrassil
+accept 928
+accept 2159
+
+# ===== Доланаар 6-8 =====
+accept 488 || Zenn Foulhoof: клыки, перья и шёлк собирай по ходу
+turnin 96630
+accept 96606
+complete 96606 || Посиди у костра Lyreena до бафа Boosted Rest
+turnin 96606
+turnin 2159
+bind npc="Innkeeper Keldamyr" | Привяжи камень в Доланааре
+turnin 928
+accept 929
+accept 475
+accept 2438
+accept 997
+accept 87288 || Награда - сумка Soft Saber Sack
+accept 98391
+accept 99046
+learn 467 npc="Kal" cost=2s | Обучение 6 ур.: Шипы, Гнев 2
+turnin 997
+accept 918
+accept 919
+complete 918
+complete 919
+turnin 918
+turnin 919
+accept 922
+complete 2438 || Комод в деревне Starbreeze
+turnin 475
+accept 476
+complete 929 || Лунный колодец Starbreeze
+complete 488
+turnin 488
+accept 489
+turnin 476
+turnin 2438
+accept 2459
+turnin 929
+accept 933
+complete 2459
+complete 489 || Шишки у корней деревьев возле Fel Rock
+turnin 489
+turnin 2459
+learn 339 npc="Kal" cost=4s | Обучение 8 ур.: Гнев корней, Целительное прикосновение 3
+
+# ===== Запад Тельдрассила 8-10 =====
+accept 487
+complete 933 || Лунный колодец Pools of Arlithrien
+accept 930 || Светящийся плод у Pools of Arlithrien
+turnin 933
+accept 7383
+complete 87288
+turnin 87288
+accept 490 || Клыки с любых фурболгов Gnarlpine - собирай по ходу
+turnin 99046
+accept 99047
+accept 937
+complete 7383 || Лунный колодец Oracle Glade
+accept 931 || Растение у Oracle Glade
+accept 938 || Mist: сопровождение на время
+complete 938
+turnin 938
+complete 487
+turnin 487
+turnin 99047
+accept 99050
+turnin 930
+turnin 7383
+accept 935
+complete 99050
+turnin 99050
+accept 99073
+learn 1058 npc="Kal" cost=12s | Обучение 10 ур.: Омоложение 2 и другое
+accept 5925
+
+# ===== Дарнас и Лунная поляна 10 =====
+zone 1457 | Иди по дороге на запад в Дарнас
+turnin 922
+accept 923
+accept 98067
+complete 98067 || 4 совы: вход в Cenarion Hold, банк, таверна Craftsmen's Terrace, ворота
+turnin 98067
+turnin 98391
+accept 2519
+turnin 2519
+accept 2518
+turnin 935
+turnin 5925
+accept 5921 || Mathrengyl учит Телепорт: Лунная поляна
+zone 1450 | Телепорт: Лунная поляна (в обычном облике, 10 сек)
+turnin 5921
+accept 5929
+complete 5929 || Дух медведя на северо-западе Лунной поляны
+turnin 5929
+accept 5931
+zone 1438 npc="Silva Fil'naveth" | Лети с Silva Fil'naveth в Рут'теран (бесплатно)
+manual npc="Vesprystus" | Открой точку полёта в Рут'теране
+zone 1457 | Портал наверх в Дарнас
+turnin 5931
+accept 6001 || Выполняется в Темных берегах
+
+# ===== Тельдрассил 10-12 =====
+complete 923
+turnin 99073
+complete 2518 || Lady Sathrah, 12 ур., север Тельдрассила
+complete 937
+turnin 937
+accept 98392
+complete 98392
+turnin 98392
+accept 98398
+complete 98398 || Кора Oracle Tree рядом
+turnin 98398
+accept 940
+complete 490
+turnin 490
+turnin 931
+zone 1457 | Снова в Дарнас
+turnin 923
+turnin 940
+accept 952
+turnin 2518
+accept 2520
+complete 2520 || Фонтан в храме Луны
+turnin 2520
+accept 6344
+learn 8936 npc="Mathrengyl Bearwalker" cost=16s | Обучение 12 ур.: Восстановление, Исступление, Revive
+zone 1438 | Портал вниз в Рут'теран
+turnin 6344
+accept 6341
+turnin 6341
+accept 6342
+zone 1439 npc="Vesprystus" | Лети в Аубердин (бесплатно)
+
+# ===== Темные берега 12-14: прибытие и облик медведя =====
+turnin 6342
+accept 6343
+manual npc="Caylais Moonfeather" | Открой точку полёта в Аубердине
+bind npc="Innkeeper Shaussiy" | Привяжи камень в Аубердине
+accept 983
+accept 3524
+accept 98025
+accept 2118
+accept 984
+accept 954
+accept 958
+accept 4811
+complete 6001 || Пещера к востоку от Аубердина: Cenarion Moondust у камня, убей Lunaclaw, поговори с духом
+zone 1438 npc="Caylais Moonfeather" | Лети в Рут'теран (бесплатно) за обликом медведя
+turnin 6343
+zone 1457 | Портал наверх в Дарнас
+turnin 6001 | Сдай Body and Heart: облик медведя, Рык, Трёпка
+zone 1439 | Портал вниз и полёт в Аубердин (бесплатно)
+complete 983
+turnin 983
+accept 1001
+complete 3524
+complete 2118 || Заманивай Rabid Thistle Bear ловушкой к Tharnariun
+complete 984
+accept 953
+complete 953
+complete 958
+complete 98025 || Чёрная сова Jai'vhanel к северу от Ameth'Aran
+turnin 953
+turnin 3524
+accept 4681
+turnin 2118
+accept 2138 || 20 медведей - по ходу всей зоны
+turnin 984
+accept 985
+accept 4761
+turnin 4761
+accept 4762
+turnin 958
+turnin 98025
+accept 963
+accept 982
+accept 965
+accept 947
+complete 4681 || Скелет черепахи в воде к западу от Аубердина
+turnin 4681
+
+# ===== Темные берега 13-14: север =====
+complete 982 || Два сундука на затонувших кораблях к северу от Аубердина
+complete 1001
+turnin 1001
+accept 1002
+turnin 954
+accept 955
+complete 955
+turnin 955
+accept 956
+complete 956
+turnin 956
+accept 957
+complete 4762 || Проба у первого водопада к северу от Аубердина
+complete 4811 || Красный кристалл на восточной стене гор
+complete 985
+complete 957 || Сожги печать у древнего огня в Ameth'Aran
+turnin 957
+turnin 982
+turnin 4762
+turnin 4811
+accept 4812
+turnin 985
+accept 986
+
+# ===== 14: Дарнас и Лунная поляна (бесплатно) =====
+zone 1438 npc="Caylais Moonfeather" | Лети в Рут'теран (бесплатно)
+zone 1457 | Портал наверх в Дарнас
+accept 6121
+accept 730
+learn 5211 npc="Mathrengyl Bearwalker" cost=36s | Обучение 14 ур.: Оглушить, Шипы 2, Гнев 3
+zone 1450 | Телепорт: Лунная поляна
+turnin 6121
+accept 6122
+zone 1439 npc="Silva Fil'naveth" | Назад в Аубердин: Silva в Рут'теран, оттуда полёт (бесплатно)
+
+# ===== Темные берега 14-17: северо-восток =====
+turnin 730
+accept 729
+accept 4763 || Сначала наполни Empty Cleansing Bowl у лунного колодца Аубердина
+accept 1138
+complete 6122 || Устье пещеры у водопада Cliffspring
+complete 947 || Пещера Cliffspring: держись правее на верхнем ярусе
+complete 4812
+turnin 4812
+accept 4813
+complete 4763 || Корм в северном лагере Blackwood, чаша у костра, убей Xabraxxis (19)
+turnin 965
+accept 966
+complete 966
+turnin 966
+accept 967 || Письмо для Delgren в Ясеневом лесу: неси с собой
+complete 1002
+complete 986
+turnin 1002
+accept 1003 || Цепочка даёт сумку Wizbang's Gunnysack
+turnin 6122
+accept 6123
+complete 6123 || Earthroot с трав, Lunar Fungus в пещерах совухов к востоку от Аубердина
+turnin 6123
+accept 6124 || 10 больных оленей - по ходу всей зоны
+turnin 947
+accept 948
+turnin 4763
+complete 2138
+turnin 2138
+turnin 4813
+turnin 986
+accept 993
+accept 4740
+complete 963 || Anaya Dawnrunner (41,61), 16 ур.
+turnin 963
+
+# ===== Темные берега 17-20: юг =====
+turnin 952
+turnin 948
+accept 944
+accept 98013
+complete 944 || Phial of Scrying у Master's Glaive
+turnin 944
+accept 949
+turnin 949
+accept 950
+accept 98042
+accept 945
+complete 945 || Сопровождение
+turnin 729
+accept 731
+complete 731 || Сопровождение: выключи автосдачу квестов
+accept 5713
+complete 5713 || Защити Sentinel Aynasha; сдаётся в Ясеневом лесу
+turnin 993
+accept 994
+complete 994 || Сопровождение Volcor
+complete 4740 || Лагерь мурлоков: волны, потом Murkdeep
+complete 1138
+complete 1003
+complete 6124
+turnin 1003
+turnin 950
+accept 951 || Руины Mathystra на дальнем севере - на 20 ур.
+turnin 4740
+turnin 98042
+turnin 1138
+turnin 994
+turnin 731
+accept 741
+accept 87760
+accept 98461 || Неси в Менетил
+accept 990 || Неси в Астранаар
+zone 1450 | Телепорт: Лунная поляна - обучение 16 и 18 ур.
+learn 770 npc="Loganaar" cost=1g49s | Обучение 16-18 ур.: Размах, Волшебный огонь и др. || Можно не брать Спячку и Восстановление 2 - сэкономишь ~40s
+zone 1439 npc="Silva Fil'naveth" | Назад в Аубердин: Silva в Рут'теран, оттуда полёт (бесплатно)
+
+# ===== 20: облик кошки (Дарнас - Лунная поляна - Дарнас) =====
+level 20 | Добери 20 ур. рядом с Аубердином
+zone 1438 npc="Caylais Moonfeather" | Лети в Рут'теран (бесплатно)
+zone 1457 | Портал наверх в Дарнас
+accept 98393
+turnin 741
+accept 942 || Неси в Менетил
+learn 16864 npc="Mathrengyl Bearwalker" cost=1g | Обучение 20 ур.: Знамение ясности, Полосование и др. || Цена Знамения ясности и Полосования в Forever неизвестна - возьми запас
+zone 1450 | Телепорт: Лунная поляна
+turnin 6124
+accept 6125
+turnin 98393
+accept 98394
+turnin 98394 || Дух кошки на юге Лунной поляны
+accept 98396
+complete 98396 || 3 реликвии в Stormrage Barrow Dens рядом; статуя у входа даёт незаметность
+turnin 98396
+accept 98731
+turnin 98731
+accept 98397
+zone 1438 npc="Silva Fil'naveth" | Лети с Silva в Рут'теран (бесплатно)
+zone 1457 | Портал наверх в Дарнас
+turnin 98397 | Сдай To Darnassus: облик кошки, Царапина, Крадущийся зверь, Разорвать
+turnin 6125 | Сдай Power over Poison: Излечение отравления
+zone 1439 | Назад в Аубердин: портал вниз и полёт (бесплатно)
+
+# ===== Темные берега 20: дальний север, уход в Ясеневый лес =====
+complete 87760 || Stormscale Beastmistress (48,13)
+complete 98013 || Руины Mathystra
+complete 951 || Руины Mathystra; обходи Baron Marinous (элита 21)
+turnin 87760
+turnin 951
+turnin 98013
+accept 5321 || Сопровождение на юг в Ясеневый лес: когда Kerlonian уснёт - Horn of Awakening
+complete 5321
+
+# ===== Ясеневый лес 20-23 =====
+turnin 5321
+turnin 5713
+turnin 967
+accept 970
+turnin 945
+accept 1010
+complete 1010
+complete 970
+turnin 1010
+accept 1020
+turnin 970
+manual npc="Daelyshia" | Открой точку полёта в Астранааре
+bind npc="Innkeeper Kimlya" | Привяжи камень в Астранааре
+turnin 990
+accept 991
+turnin 1020
+accept 1033
+accept 1008
+accept 1054
+complete 1033
+turnin 991
+accept 1023
+complete 1023
+complete 1008
+accept 1007
+complete 1007
+turnin 1007
+turnin 1023
+accept 1024
+accept 1025
+turnin 1008
+turnin 1033
+accept 1034
+complete 1034 || Руины Stardust к югу от Астранаара
+turnin 1034
+complete 1054 || Dal Bloodclaw в деревне Thistlefur к северу от Астранаара
+turnin 1024 || Shael'dryn у лунного колодца к северо-востоку
+complete 1025
+turnin 1054
+turnin 1025
+
+# ===== В Болотину 23 =====
+zone 1439 npc="Daelyshia" cost=3s30c | Лети в Аубердин
+zone 1437 @1439 32.3,44.1 | Корабль в Менетил (бывший причал Менетила в Аубердине)
+manual npc="Shellei Brondir" | Открой точку полёта в Менетиле
+bind npc="Innkeeper Helbrek" | Привяжи камень в Менетиле
+
+# ===== Болотина 23-26 =====
+turnin 942
+accept 943
+turnin 98461
+accept 305
+accept 279
+accept 463
+accept 470
+accept 98282
+accept 484
+accept 98197
+complete 98197 || Брёвна и железо лежат по всему Менетилу
+complete 484
+complete 279
+turnin 98197
+turnin 484
+accept 471 || 6 шкур больших кроколисков - по ходу, сдашь на 29
+turnin 279
+accept 281
+complete 281
+turnin 281
+accept 284
+turnin 284
+accept 285
+turnin 285
+accept 286
+turnin 286
+accept 98189
+turnin 98189
+zone 1450 | Телепорт: Лунная поляна - обучение 22 и 24 ур. (камень должен быть готов)
+learn 1822 npc="Loganaar" cost=3g20s | Обучение 22-24 ур.: Глубокая рана, Омоложение 4 и др. || Можно не брать Умиротворение животного, Гнев 4, Лунный огонь 4 - сэкономишь ~90s
+zone 1437 | Камень в Менетил
+complete 98282 || Пещера Thelgen Rock
+accept 469
+accept 98245
+accept 98246
+turnin 463
+accept 276
+complete 276
+turnin 276
+accept 277
+complete 277
+turnin 277
+accept 275
+turnin 305
+accept 306
+accept 294
+complete 294
+turnin 294
+accept 295
+accept 299
+complete 943
+complete 470 || Мешок Sida из слизней у Ironbeard's Tomb
+turnin 943
+turnin 469
+turnin 306
+turnin 98282
+turnin 470
+accept 98208
+accept 473
+turnin 473
+accept 464
+accept 98221
+
+# ===== Через Стальгорн и Штормград в Темнолесье 26 =====
+zone 1432 | Иди по дороге на юг через Дун Альгаз в Лок Модан
+manual npc="Thorgrum Borrelson" | Открой точку полёта в Телсамаре
+zone 1455 | Иди на запад через Дун Морог в Стальгорн
+manual npc="Gryth Thurden" | Открой точку полёта в Стальгорне
+learn 199 npc="Buliwyf Stonehand" cost=10s | Выучи двуручные булавы: в Forever урон оружия работает в облике || Древковое - у Woo Ping в Штормграде за 1g, по желанию
+zone 1453 | Трамвай из Тинкертауна в Штормград
+manual npc="Dungar Longdrink" | Открой точку полёта в Штормграде
+learn 1850 npc="Theridran" cost=2g25s | Обучение 26 ур.: Порыв, Устранение яда и др.
+zone 1431 | Иди на юг через Элвинн в Темнолесье
+
+# ===== Темнолесье 26-29 =====
+manual npc="Felicia Maline" | Открой точку полёта в Темнолесье
+bind npc="Innkeeper Trelayne" | Привяжи камень в Темнолесье
+accept 163
+accept 164
+accept 165
+accept 101
+accept 90
+accept 56
+accept 174
+accept 96139
+complete 56 || Кладбище к юго-востоку от Темнолесья
+turnin 56
+accept 57
+complete 174
+turnin 174
+accept 175
+turnin 175 || Blind Mary к востоку от Темнолесья
+accept 177
+accept 245 || Watcher Dodds по пути на запад
+turnin 163
+accept 5
+complete 96139
+complete 177
+complete 101
+turnin 164
+accept 95
+accept 226
+complete 95
+turnin 95
+accept 230
+turnin 230
+complete 90
+complete 226
+turnin 226
+turnin 165
+accept 148
+complete 245
+complete 57
+turnin 245
+turnin 5
+accept 93
+turnin 90
+turnin 148
+accept 149
+turnin 96139
+turnin 101
+turnin 57
+turnin 177
+accept 262
+turnin 262
+accept 265
+turnin 265
+accept 266
+turnin 266
+accept 453
+turnin 149
+accept 154
+turnin 154
+accept 157
+accept 173
+complete 173 || Ночная тень: ферма Йоргена к юго-востоку
+turnin 173
+accept 221
+complete 93
+turnin 93
+accept 240
+complete 221
+turnin 221
+turnin 240 || Снова на запад: Jitters на Raven Hill
+turnin 453
+accept 268
+turnin 157
+accept 158
+turnin 268
+turnin 158 || Tavernkeep Smitts в Темнолесье
+accept 156
+complete 156
+turnin 156
+accept 159
+turnin 159
+accept 133
+complete 133
+turnin 133
+
+# ===== Болотина 28-30 =====
+zone 1453 npc="Felicia Maline" cost=3s30c | Лети в Штормград
+learn 2091 npc="Theridran" cost=3g50s | Обучение 28 ур.: Омоложение 5, Царапина 2 и др. || Можно не брать Вызывающий рёв и Съёживание
+zone 1437 npc="Dungar Longdrink" cost=3s80c | Лети в Менетил через Стальгорн
+bind npc="Innkeeper Helbrek" | Привяжи камень в Менетиле
+accept 98072
+accept 98240
+complete 98072
+complete 471
+complete 98245 || Raptor Ridge: Razormaw бьют больно
+complete 98246
+turnin 98240
+turnin 98245
+turnin 98246
+complete 295
+turnin 295
+accept 296
+complete 296
+turnin 296
+complete 299
+turnin 299
+turnin 275
+accept 98283
+complete 275
+turnin 275
+complete 98283
+turnin 98283
+complete 464 || Лагерь Angerfang
+complete 98221
+complete 98208
+turnin 98072
+turnin 471
+turnin 98208
+turnin 464
+turnin 98221
+level 30 | Добери 30 ур.
+zone 1450 | Телепорт: Лунная поляна - Походный облик
+learn 783 npc="Loganaar" cost=5g40s | Обучение 30 ур.: Походный облик (+40% скорости) и др.
+zone 1437 | Камень в Менетил
+zone 1424 @1437 4.5,56.6 | Корабль в Южнобережье: дальше Хилсбрад (30+)
