@@ -52,6 +52,21 @@ function ns.SelfTest()
   add("API дерева талантов: %s", First("GetTalentInfo"))
   add("API книги заклинаний: %s", First("GetSpellBookItemName", "C_SpellBook.GetSpellBookItemName"))
   add("API навыков: %s", First("GetSkillLineInfo", "GetProfessionInfo"))
+  add("API типов предметов: %s", First("C_Item.GetItemInfoInstant", "GetItemInfoInstant"))
+  add("API баффов: %s", First("C_UnitAuras.GetAuraDataByIndex", "UnitAura"))
+  add("API репутации: %s", First("GetFactionInfo", "C_Reputation.GetFactionDataByIndex"))
+  add("API характеристик: %s; группы: %s", First("UnitStat"), First("GetNumGroupMembers"))
+  add("Гид: стрелка %s; база точек %s + %s; размер карты %s; сданные квесты %s",
+    First("TomTom.AddWaypoint"), First("QuestDB.Get"), First("QuestieLoader.ImportModule"),
+    First("C_Map.GetMapWorldSize"), First("C_QuestLog.IsQuestFlaggedCompleted", "IsQuestFlaggedCompleted"))
+  local gs = ns.GuideStatus and ns.GuideStatus()
+  if gs and not gs.done then
+    local pt = gs.point
+    add("Гид: шаг %d/%d «%s», точка: %s", gs.step, gs.total, gs.text,
+      pt and string.format("карта %s %.1f, %.1f", pt.map, pt.x, pt.y) or "нет")
+  else
+    add("Гид: %s", gs and "пройден" or "нет в Plan.lua")
+  end
   local hook
   if ns.questLogHooked then
     hook = "стоят (хук QuestLog_Update)"
@@ -88,6 +103,15 @@ function ns.SelfTest()
       s.gear and string.format("надето %d, пусто %d", #s.gear.items, #s.gear.empty) or "НЕТ",
       s.talentTabs and tostring(spent) or "НЕТ", s.spells and tostring(spells) or "НЕТ",
       s.skills and tostring(skills) or "НЕТ")
+    local bank = ns.char and ns.char.bank
+    add("В сумках предметов: %s; банк: %s; баффов: %s, дебаффов: %s; фракций: %s; характеристики: %s",
+      s.inv and tostring(#s.inv.items) or "НЕТ",
+      bank and string.format("%d предм. на %s", #bank.items, date("%d.%m %H:%M", bank.at)) or "не открывался",
+      s.buffs and tostring(#s.buffs) or "НЕТ", s.debuffs and tostring(#s.debuffs) or "НЕТ",
+      s.rep and tostring(#s.rep) or "НЕТ", s.stats and "есть" or "НЕТ")
+    add("Сейчас: здоровье %s%%, в бою: %s; цель: %s; группа: %s",
+      tostring(s.vitals and s.vitals.hp), (s.vitals and s.vitals.combat) and "да" or "нет",
+      s.target and "есть" or "нет", s.group and tostring(s.group.size) or "нет")
   else
     add("Снимок: НЕТ")
   end

@@ -3,7 +3,7 @@
 -- Снимок попадает на диск (SavedVariables) при /reload, выходе из игры или /fc sync.
 local ADDON, ns = ...
 
-ns.VERSION = "0.2.0"
+ns.VERSION = "0.4.0"
 ns.FONT = "Fonts\\ARIALN.TTF" -- есть во всех клиентах и поддерживает кириллицу
 
 local HEARTHSTONE_ITEM = 6948
@@ -21,6 +21,9 @@ local function Plan()
   return nil
 end
 ns.Plan = Plan
+
+-- Сданные в этой сессии квесты: событие приходит раньше, чем обновляется флаг в API
+ns.turnedIn = {}
 
 -- Ошибки не роняют аддон: запоминаем их для /fc test и пишем в чат один раз
 ns.errors = {}
@@ -370,6 +373,184 @@ local function ReadSkills()
 end
 
 ---------------------------------------------------------------------------
+-- Содержимое сумок и банка, репутация, баффы, характеристики, цель, группа
+---------------------------------------------------------------------------
+local function ItemInstant(link)
+  local f = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
+  if f then return f(link) end
+end
+
+local function BagName(bag)
+  if CC and CC.GetBagName then return CC.GetBagName(bag) end
+  if GetBagName then return GetBagName(bag) end
+end
+
+local function Pct(cur, max)
+  if not cur or not max or max <= 0 then return nil end
+  return math.floor(cur / max * 100 + 0.5)
+end
+
+-- Предметы в контейнерах: одинаковые складываем в одну запись
+local function ScanItems(bags)
+  local list, byId = {}, {}
+  for _, bag in ipairs(bags) do
+    for slot = 1, (BagNumSlots(bag) or 0) do
+      local quality, count, link = BagItem(bag, slot)
+      local id = link and tonumber(link:match("item:(%d+)"))
+      if id and byId[id] then
+        byId[id].n = byId[id].n + (count or 1)
+      elseif id then
+        local name, _, _, ilvl, req = ItemInfo(link)
+        local _, _, _, equipLoc, _, classID = ItemInstant(link)
+        -- у неэкипируемых предметов Classic Era отдаёт INVTYPE_NON_EQUIP_IGNORE, а не пустую строку
+        local equippable = equipLoc and equipLoc ~= "" and equipLoc ~= "INVTYPE_NON_EQUIP_IGNORE"
+        local it = {
+          id = id, name = name or link:match("%[(.-)%]"), n = count or 1, q = quality, cls = classID,
+          slot = equippable and equipLoc or nil, ilvl = ilvl, req = req,
+        }
+        byId[id] = it
+        list[#list + 1] = it
+      end
+    end
+  end
+  return list
+end
+
+local function ReadBags()
+  local bags, ids = {}, {}
+  for bag = 0, (NUM_BAG_SLOTS or 4) do
+    local slots = BagNumSlots(bag) or 0
+    if slots > 0 then
+      bags[#bags + 1] = { name = BagName(bag), slots = slots, free = BagFreeSlots(bag) or 0 }
+    end
+    ids[#ids + 1] = bag
+  end
+  return { bags = bags, items = ScanItems(ids) }
+end
+
+-- Банк виден только у банкира: запоминаем содержимое при каждом визите
+local function ScanBank()
+  local bags = { BANK_CONTAINER or -1 }
+  local first = (NUM_BAG_SLOTS or 4) + 1
+  for bag = first, first + (NUM_BANKBAGSLOTS or 6) - 1 do bags[#bags + 1] = bag end
+  ns.char.bank = { at = time(), items = ScanItems(bags) }
+end
+
+local function ReadReputation()
+  local out = {}
+  local function add(name, standing, cur, max)
+    out[#out + 1] = {
+      name = name, standing = _G["FACTION_STANDING_LABEL" .. tostring(standing)] or tostring(standing),
+      cur = cur, max = max,
+    }
+  end
+  if GetNumFactions and GetFactionInfo then
+    for i = 1, (GetNumFactions() or 0) do
+      local name, _, standing, barMin, barMax, value, _, _, isHeader, isCollapsed, hasRep = GetFactionInfo(i)
+      if isHeader and isCollapsed then
+        out[#out + 1] = { name = name, collapsed = true }
+      elseif name and (not isHeader or hasRep) then
+        add(name, standing, (value or 0) - (barMin or 0), (barMax or 0) - (barMin or 0))
+      end
+    end
+  elseif C_Reputation and C_Reputation.GetNumFactions and C_Reputation.GetFactionDataByIndex then
+    for i = 1, (C_Reputation.GetNumFactions() or 0) do
+      local f = C_Reputation.GetFactionDataByIndex(i)
+      if f and f.isHeader and f.isCollapsed then
+        out[#out + 1] = { name = f.name, collapsed = true }
+      elseif f and f.name and (not f.isHeader or f.isHeaderWithRep) then
+        local low = f.currentReactionThreshold or 0
+        add(f.name, f.reaction, (f.currentStanding or 0) - low, (f.nextReactionThreshold or 0) - low)
+      end
+    end
+  else
+    return nil
+  end
+  return out
+end
+
+-- Баффы или дебаффы игрока: название, стаки, сколько секунд осталось
+local function ReadAuras(filter)
+  local out = {}
+  for i = 1, 40 do
+    local name, count, duration, expires
+    if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
+      local a = C_UnitAuras.GetAuraDataByIndex("player", i, filter)
+      if not a then break end
+      name, count, duration, expires = a.name, a.applications, a.duration, a.expirationTime
+    elseif UnitAura then
+      local _
+      name, _, count, _, duration, expires = UnitAura("player", i, filter)
+      if not name then break end
+    else
+      return nil
+    end
+    local left = (duration and duration > 0 and expires) and (expires - GetTime()) or nil
+    out[#out + 1] = {
+      name = name, n = (count and count > 1) and count or nil,
+      left = left and math.max(0, math.floor(left)) or nil,
+    }
+  end
+  return out
+end
+
+local function ReadVitals()
+  return {
+    hp = Pct(UnitHealth("player"), UnitHealthMax("player")),
+    mana = UnitPower and Pct(UnitPower("player", 0), UnitPowerMax("player", 0)) or nil,
+    combat = (UnitAffectingCombat and UnitAffectingCombat("player")) and true or false,
+  }
+end
+
+local function ReadStats()
+  if not UnitStat then return nil end
+  local st = {}
+  for i = 1, 5 do
+    local _, value = UnitStat("player", i)
+    st[i] = value
+  end
+  local armor = UnitArmor and select(2, UnitArmor("player")) or nil
+  return { str = st[1], agi = st[2], sta = st[3], int = st[4], spi = st[5], armor = armor }
+end
+
+local function ReadTarget()
+  if not (UnitExists and UnitExists("target")) then return nil end
+  local t = {
+    level = UnitLevel("target"),
+    kind = UnitClassification and UnitClassification("target") or nil,
+    enemy = (UnitCanAttack and UnitCanAttack("player", "target")) and true or false,
+    dead = (UnitIsDead and UnitIsDead("target")) and true or nil,
+    hp = Pct(UnitHealth("target"), UnitHealthMax("target")),
+  }
+  if UnitIsPlayer and UnitIsPlayer("target") then
+    local _, cls = UnitClass("target")
+    t.player = cls or "?" -- имена других игроков не сохраняем
+  else
+    t.name = UnitName("target")
+  end
+  return t
+end
+
+local function ReadGroup()
+  local n = (GetNumGroupMembers and GetNumGroupMembers()) or 0
+  if n == 0 then return nil end
+  local g = { size = n, raid = (IsInRaid and IsInRaid()) and true or nil, members = {} }
+  if not g.raid then
+    for i = 1, 4 do
+      local u = "party" .. i
+      if UnitExists(u) then
+        local _, cls = UnitClass(u)
+        g.members[#g.members + 1] = {
+          class = cls, level = UnitLevel(u),
+          offline = (UnitIsConnected and not UnitIsConnected(u)) or nil,
+        }
+      end
+    end
+  end
+  return g
+end
+
+---------------------------------------------------------------------------
 -- Снимок состояния
 ---------------------------------------------------------------------------
 function ns.Collect()
@@ -462,6 +643,16 @@ function ns.Collect()
   s.spells = Part(ReadSpells)
   s.skills = Part(ReadSkills)
 
+  -- Содержимое сумок, состояние в момент снимка, характеристики, репутация
+  s.inv = Part(ReadBags)
+  s.vitals = Part(ReadVitals)
+  s.buffs = Part(function() return ReadAuras("HELPFUL") end)
+  s.debuffs = Part(function() return ReadAuras("HARMFUL") end)
+  s.target = Part(ReadTarget)
+  s.group = Part(ReadGroup)
+  s.stats = Part(ReadStats)
+  s.rep = Part(ReadReputation)
+
   ns.state = s
   return s
 end
@@ -471,7 +662,50 @@ end
 ---------------------------------------------------------------------------
 local QUALITY = { [0] = "серый", [1] = "белый", [2] = "зелёный", [3] = "синий", [4] = "эпик", [5] = "легенд." }
 
-function ns.BuildText(s, history)
+local function AuraList(list)
+  local parts = {}
+  for _, a in ipairs(list) do
+    parts[#parts + 1] = tostring(a.name) .. (a.n and (" x" .. a.n) or "")
+      .. ((a.left and a.left > 0) and (" " .. ns.Clock(a.left)) or "")
+  end
+  return #parts > 0 and table.concat(parts, ", ") or "нет"
+end
+
+local function ItemText(it)
+  local extra = {}
+  if it.slot then
+    extra[#extra + 1] = QUALITY[it.q] or "?"
+    extra[#extra + 1] = "iLvl " .. tostring(it.ilvl or "?")
+    if it.req and it.req > 1 then extra[#extra + 1] = "треб. " .. it.req end
+    extra[#extra + 1] = tostring(_G[it.slot] or it.slot) -- INVTYPE_FEET -> "Ступни" в клиенте
+  end
+  return string.format("[%s] %s%s%s", tostring(it.id), tostring(it.name), it.n > 1 and (" x" .. it.n) or "",
+    #extra > 0 and (" (" .. table.concat(extra, ", ") .. ")") or "")
+end
+
+-- Предметы по группам: classID 2/4 - оружие/доспехи, 12 - квестовые, 0 - расходники
+local function ItemGroups(items)
+  local groups = { { "Экипировка", {} }, { "Квестовое", {} }, { "Расходники", {} }, { "Прочее", {} } }
+  for _, it in ipairs(items) do
+    local g = 4
+    if it.cls == 12 then
+      g = 2
+    elseif it.slot and (it.cls == 2 or it.cls == 4) then
+      g = 1
+    elseif it.cls == 0 then
+      g = 3
+    end
+    local list = groups[g][2]
+    list[#list + 1] = ItemText(it)
+  end
+  local parts = {}
+  for _, g in ipairs(groups) do
+    if #g[2] > 0 then parts[#parts + 1] = g[1] .. ": " .. table.concat(g[2], ", ") end
+  end
+  return #parts > 0 and table.concat(parts, " | ") or "пусто"
+end
+
+function ns.BuildText(s, history, bank)
   local L = {}
   local function add(fmt, ...) L[#L + 1] = string.format(fmt, ...) end
   local pct = s.xpMax > 0 and math.floor(s.xp / s.xpMax * 100) or 0
@@ -485,12 +719,40 @@ function ns.BuildText(s, history)
   add("Где: %s / %s (map %s) %s, %s", tostring(s.zone),
     (s.subzone and s.subzone ~= "") and s.subzone or "-",
     tostring(s.mapID), tostring(s.x), tostring(s.y))
+  if s.vitals then
+    add("Сейчас: здоровье %s%%%s%s", tostring(s.vitals.hp or "?"),
+      s.vitals.mana and (", мана " .. s.vitals.mana .. "%") or "", s.vitals.combat and " [В БОЮ]" or "")
+  end
+  if s.target then
+    local t = s.target
+    add("Цель: %s, ур. %s%s%s, здоровье %s%%%s", t.name and tostring(t.name) or ("игрок " .. tostring(t.player)),
+      t.level == -1 and "??" or tostring(t.level), (t.kind and t.kind ~= "normal") and (", " .. t.kind) or "",
+      t.enemy and ", враг" or "", tostring(t.hp or "?"), t.dead and " [мёртв]" or "")
+  end
+  if s.group then
+    local parts = {}
+    for _, m in ipairs(s.group.members) do
+      parts[#parts + 1] = tostring(m.class) .. " " .. tostring(m.level) .. (m.offline and " (оффлайн)" or "")
+    end
+    add("%s: %d чел.%s", s.group.raid and "Рейд" or "Группа", s.group.size,
+      #parts > 0 and (": " .. table.concat(parts, ", ")) or "")
+  end
+  if s.buffs or s.debuffs then
+    add("Баффы: %s | Дебаффы: %s", s.buffs and AuraList(s.buffs) or "?", s.debuffs and AuraList(s.debuffs) or "?")
+  end
   add("Сумки: свободно %d из %d; серое: %d шт. (~%s)", s.bagFree, s.bagTotal, s.junk, ns.Money(s.junkValue))
   add("ХС: %s, привязан: %s%s",
     s.hsHave and ns.Clock(s.hsCD) or "нет в сумках", tostring(s.hsBind),
     s.tpCD and (" | Телепорт: Лунная поляна: " .. ns.Clock(s.tpCD)) or "")
   add("Таланты свободно: %s | Прочность мин.: %s%% | Деньги: %s | Обликов: %d",
     tostring(s.talents), tostring(s.durMin), ns.Money(s.money), s.forms or 0)
+  local gs = ns.GuideStatus and ns.GuideStatus()
+  if gs and gs.done then
+    add("Гид: пройден (%d шагов, план от %s)", gs.total, tostring(gs.at))
+  elseif gs then
+    add("Гид: шаг %d/%d «%s»%s (план от %s)", gs.step, gs.total, gs.text,
+      gs.where and (", " .. gs.where) or "", tostring(gs.at))
+  end
   add("Квесты: %d, готово к сдаче: %d%s", #s.quests, s.questsReady,
     (s.questsHidden or 0) > 0 and string.format(", СКРЫТО свёрнутыми заголовками: %d", s.questsHidden) or "")
   for _, q in ipairs(s.quests) do
@@ -511,6 +773,22 @@ function ns.BuildText(s, history)
     end
     add("Экипировка: %s%s", #parts > 0 and table.concat(parts, "; ") or "ничего",
       #s.gear.empty > 0 and (" | пусто: " .. table.concat(s.gear.empty, ", ")) or "")
+  end
+  if s.stats then
+    local st = s.stats
+    add("Характеристики: сила %s, ловкость %s, выносливость %s, интеллект %s, дух %s, броня %s",
+      tostring(st.str), tostring(st.agi), tostring(st.sta), tostring(st.int), tostring(st.spi), tostring(st.armor))
+  end
+  if s.inv then
+    local bags = {}
+    for _, b in ipairs(s.inv.bags) do
+      bags[#bags + 1] = string.format("%s %d (свободно %d)", tostring(b.name), b.slots, b.free)
+    end
+    add("Сумки по отдельности: %s", table.concat(bags, ", "))
+    add("В сумках: %s", ItemGroups(s.inv.items))
+  end
+  if bank then
+    add("Банк (на %s): %s", date("%d.%m %H:%M", bank.at), ItemGroups(bank.items))
   end
   if s.talentTabs then
     local parts = {}
@@ -542,6 +820,17 @@ function ns.BuildText(s, history)
       end
     end
     add("Навыки: %s", #parts > 0 and table.concat(parts, " | ") or "нет")
+  end
+  if s.rep then
+    local parts = {}
+    for _, r in ipairs(s.rep) do
+      if r.collapsed then
+        parts[#parts + 1] = tostring(r.name) .. ": СВЁРНУТО"
+      else
+        parts[#parts + 1] = string.format("%s: %s %d/%d", tostring(r.name), tostring(r.standing), r.cur, r.max)
+      end
+    end
+    add("Репутация: %s", #parts > 0 and table.concat(parts, "; ") or "нет")
   end
   if history and #history > 0 then
     local parts = {}
@@ -621,12 +910,20 @@ end
 ---------------------------------------------------------------------------
 -- Обновление
 ---------------------------------------------------------------------------
-function ns.Update()
+function ns.Update(onLogout)
   if not ns.char then return end
   local prev = ns.state
   local s = ns.Collect()
+  -- При выходе из игры (в отличие от /reload) сумки, опыт и карта уже выгружены:
+  -- оставляем последний полный снимок, иначе он затрётся пустым
+  if onLogout and prev and s.bagTotal == 0 and prev.bagTotal > 0 then
+    s = prev
+    ns.state = prev
+  end
+  if ns.bankOpen then ns.SafeCall(ScanBank) end
+  if ns.GuideCheck then ns.SafeCall(ns.GuideCheck) end
   ns.char.snap = s
-  ns.char.text = ns.BuildText(s, ns.char.history)
+  ns.char.text = ns.BuildText(s, ns.char.history, ns.char.bank)
   ns.CheckAlerts(prev, s)
   if ns.RefreshUI then ns.RefreshUI() end
 end
@@ -641,8 +938,9 @@ function ns.RequestUpdate()
   end)
 end
 
--- Раз в 5 секунд: только кулдауны и окно, без полного сканирования
+-- Раз в секунду: кулдауны, приход в точку гида и окно, без полного сканирования
 function ns.Tick()
+  if ns.GuideCheck then ns.SafeCall(ns.GuideCheck) end
   local s = ns.state
   if not s then return end
   if s.hsHave then
@@ -696,6 +994,7 @@ local EVENTS = {
   "PLAYER_DEAD", "PLAYER_ALIVE", "PLAYER_UNGHOST", "CHARACTER_POINTS_CHANGED",
   "SPELLS_CHANGED", "UPDATE_SHAPESHIFT_FORMS", "HEARTHSTONE_BOUND",
   "PLAYER_EQUIPMENT_CHANGED", "SKILL_LINES_CHANGED",
+  "BANKFRAME_OPENED", "BANKFRAME_CLOSED", "PLAYERBANKSLOTS_CHANGED",
 }
 ns.unsupportedEvents = {}
 for _, ev in ipairs(EVENTS) do
@@ -715,7 +1014,7 @@ events:SetScript("OnEvent", function(_, ev, ...)
     InitChar()
     Hist("LOGIN")
     ns.SafeCall(ns.Update)
-    C_Timer.NewTicker(5, function() ns.SafeCall(ns.Tick) end)
+    C_Timer.NewTicker(1, function() ns.SafeCall(ns.Tick) end)
     if ns.CreateUI then ns.SafeCall(ns.CreateUI) end
     if not Plan() then
       Print("Plan.lua не загрузился - проверь синтаксис файла. Аддон работает без плана.")
@@ -724,7 +1023,7 @@ events:SetScript("OnEvent", function(_, ev, ...)
   elseif ev == "PLAYER_LOGOUT" then
     if ns.char then
       Hist("LOGOUT")
-      ns.SafeCall(ns.Update)
+      ns.SafeCall(ns.Update, true)
     end
     return
   elseif ev == "PLAYER_LEVEL_UP" then
@@ -733,10 +1032,15 @@ events:SetScript("OnEvent", function(_, ev, ...)
   elseif ev == "QUEST_TURNED_IN" then
     local questID, xp = ...
     Hist("Q", questID, xp)
+    if questID then ns.turnedIn[questID] = true end
   elseif ev == "PLAYER_DEAD" then
     Hist("D")
   elseif ev == "ZONE_CHANGED_NEW_AREA" then
     Hist("Z", GetZoneText and GetZoneText() or nil)
+  elseif ev == "BANKFRAME_OPENED" then
+    ns.bankOpen = true
+  elseif ev == "BANKFRAME_CLOSED" then
+    ns.bankOpen = nil
   end
   ns.RequestUpdate()
 end)
@@ -765,6 +1069,10 @@ SlashCmdList["FOREVERCOACH"] = function(msg)
     ns.Sync()
   elseif cmd == "test" then
     if ns.SelfTest then ns.SafeCall(ns.SelfTest) end
+  elseif cmd == "next" then
+    if ns.GuideNext then ns.SafeCall(ns.GuideNext) end
+  elseif cmd == "guide" then
+    if ns.GuideShow then ns.SafeCall(ns.GuideShow) end
   elseif cmd == "lock" or cmd == "unlock" then
     ns.db.ui.locked = (cmd == "lock") or nil
     Print(cmd == "lock" and "Окно закреплено." or "Окно можно двигать.")
@@ -772,6 +1080,6 @@ SlashCmdList["FOREVERCOACH"] = function(msg)
     ns.db.ui.point, ns.db.ui.relPoint, ns.db.ui.x, ns.db.ui.y = nil, nil, nil, nil
     Print("Позиция окна сброшена - сделай /reload.")
   else
-    Print("/fc - окно; /fc status - текст для Claude; /fc sync - сохранить и /reload; /fc test - самопроверка; /fc lock|unlock; /fc reset")
+    Print("/fc - окно; /fc status - текст для Claude; /fc sync - сохранить и /reload; /fc guide - шаг гида и стрелка; /fc next - пропустить шаг; /fc test - самопроверка; /fc lock|unlock; /fc reset")
   end
 end

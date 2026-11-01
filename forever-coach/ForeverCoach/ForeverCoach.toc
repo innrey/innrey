@@ -1,11 +1,13 @@
 ## Interface: 11509
 ## Title: ForeverCoach
-## Notes: Leveling coach: game-state snapshot for Claude and in-game hints. Read-only, no automation.
+## Notes: Leveling coach: game-state snapshot for Claude, in-game hints and a TomTom arrow guide. Read-only, no automation.
 ## Author: innrey
-## Version: 0.2.0
+## Version: 0.4.0
 ## SavedVariables: ForeverCoachDB
+## OptionalDeps: TomTom, Questie, QuestieDB
 
 Plan.lua
 Core.lua
+Guide.lua
 UI.lua
 Debug.lua

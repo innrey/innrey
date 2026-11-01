@@ -11,6 +11,22 @@ ForeverCoachPlan = {
   -- Пример: now = { char = "Имя", level = 12, at = "05.11 03:10", steps = { "...", "..." } },
   now = nil,
 
+  -- Гид со стрелкой TomTom: аддон ведёт по шагам и сам закрывает выполненные.
+  -- Условие шага (одно): accept/complete/turnin = ID квеста, level = уровень;
+  -- без условия шаг закрывается приходом в точку (radius ярдов, по умолчанию 15) или /fc next.
+  -- Точка: map (uiMapID) + x + y (0-100), или npc/object = ID из базы Questie;
+  -- без них аддон берёт из Questie того, кто даёт/принимает квест, или места целей квеста.
+  -- Пример: guide = { char = "Имя", at = "05.11 03:10", steps = {
+  --   { text = "Сдай квест", turnin = 747 },
+  --   { text = "Убей 7 Plainstrider", complete = 750 },
+  --   { text = "К тренеру друидов", npc = 3033 },
+  --   { text = "К лодке", map = 1439, x = 33.1, y = 40.2 },
+  -- } },
+  guide = { char = "Innrey", at = "01.11 23:45", steps = {
+    { text = "Выполни The Balance of Nature", complete = 456 },
+    { text = "Сдай The Balance of Nature", turnin = 456 },
+  } },
+
   -- Метки квестов по ID (работают в любой локализации клиента).
   -- Claude заполняет их по ID из снимка состояния.
   skip = {},      -- [questID] = "почему пропустить"

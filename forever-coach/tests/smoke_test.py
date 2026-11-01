@@ -20,6 +20,7 @@ local function load(name)
 end
 if LOAD_PLAN then load("Plan.lua") end
 load("Core.lua")
+load("Guide.lua")
 load("UI.lua")
 load("Debug.lua")
 
@@ -67,6 +68,29 @@ assert(char.text:find("Экипировка: Голова [90001] Test Cap (зе
 assert(char.text:find("Дерево талантов: Balance 0 | Feral Combat 5: Ferocity 5/5 | Restoration 0", 1, true), "таланты в тексте")
 assert(char.text:find("Balance: Wrath 2, Moonfire 1", 1, true), "заклинания в тексте")
 
+-- Сумки, состояние, цель, группа, характеристики, репутация
+assert(#s.inv.bags == 1 and s.inv.bags[1].name == "Backpack" and s.inv.bags[1].free == 2, "сумки по отдельности")
+assert(#s.inv.items == 6, "предметов в сумках: " .. #s.inv.items)
+assert(s.vitals.hp == 80 and s.vitals.mana == 50 and s.vitals.combat == false, "здоровье и мана")
+assert(#s.buffs == 1 and s.buffs[1].left == 1700 and #s.debuffs == 1, "баффы и дебаффы")
+assert(s.target.name == "Plainstrider" and s.target.enemy and s.target.hp == 100, "цель")
+assert(s.group.size == 2 and s.group.members[1].class == "WARRIOR", "группа")
+assert(s.stats.sta == 22 and s.stats.armor == 50, "характеристики")
+assert(#s.rep == 2 and s.rep[1].name == "Darnassus" and s.rep[1].cur == 1200 and s.rep[2].collapsed, "репутация")
+for _, line in ipairs({
+  "Сейчас: здоровье 80%, мана 50%",
+  "Цель: Plainstrider, ур. 2, враг, здоровье 100%",
+  "Группа: 2 чел.: WARRIOR 11",
+  "Баффы: Mark of the Wild 28:20 | Дебаффы: Resurrection Sickness 5:00",
+  "Сумки по отдельности: Backpack 16 (свободно 2)",
+  "В сумках: Экипировка: [90011] Test Boots (зелёный, iLvl 8, треб. 6, INVTYPE_FEET) | Квестовое: [90010] Test Quest Item | Расходники: [99] Test Water x9 | Прочее: [1] Junk x2",
+  "Характеристики: сила 20, ловкость 15, выносливость 22, интеллект 18, дух 21, броня 50",
+  "Репутация: Darnassus: Friendly 1200/6000; Other: СВЁРНУТО",
+}) do
+  assert(char.text:find(line, 1, true), "нет в тексте: " .. line)
+end
+assert(not char.text:find("Банк", 1, true), "банк ещё не открывали")
+
 -- Квест выполнен -> сообщение в чат
 MOCK.q3done = 1
 MOCK.Fire("QUEST_LOG_UPDATE")
@@ -93,6 +117,16 @@ assert(char.snap.hsCD == 0, "камень готов")
 MOCK.Fire("QUEST_TURNED_IN", 2138, 1150)
 MOCK.Fire("PLAYER_DEAD")
 MOCK.Flush()
+
+-- Банк: содержимое запоминается у банкира и остаётся в снимке после ухода
+MOCK.bankOpen = true
+MOCK.Fire("BANKFRAME_OPENED")
+MOCK.Flush()
+MOCK.bankOpen = nil
+MOCK.Fire("BANKFRAME_CLOSED")
+MOCK.Flush()
+assert(char.bank and #char.bank.items == 1 and char.bank.items[1].n == 8, "банк")
+assert(char.text:find("Банк (на ", 1, true) and char.text:find("[90020] Test Bank Ore x8", 1, true), "банк в тексте")
 
 -- План Claude в окне
 if LOAD_PLAN then
@@ -148,7 +182,62 @@ assert(#ns.errors == 2 and ns.errors[2]:find("talents api", 1, true), "ошиб�
 assert(char.snap.talentTabs == nil and char.snap.gear and char.snap.spells, "пропал только раздел талантов")
 assert(char.text:find("Экипировка:", 1, true) and not char.text:find("Дерево талантов:", 1, true), "текст без талантов")
 
+-- Гид: шаги из Plan.lua, точки из Questie, стрелка TomTom (modern) или расстояние по карте (classic)
+if LOAD_PLAN then
+  ForeverCoachPlan.guide = { char = "Лунолист", at = "test", steps = {
+    { text = "Взять Flight to Auberdine", accept = 6342 },
+    { text = "Убить Lord Melenas", complete = 932 },
+    { text = "Сдать Twisted Hatred", turnin = 932 },
+    { text = "К причалу", map = 1439, x = 33, y = 40 },
+    { text = "Получить 12 уровень", level = 12 },
+    { text = "Поговорить с хозяином таверны" },
+  } }
+  ns.GuideCheck()
+  assert(char.guide.step == 2, "шаг 1 (квест уже в журнале) должен закрыться сам: " .. char.guide.step)
+  local pt = ns.guidePoint
+  assert(pt and pt.map == 1439 and pt.x == 40 and pt.y == 50, "точка цели квеста: ближайшая из Questie")
+  if MODE == "modern" then
+    assert(MOCK.waypoint and MOCK.waypoint.x == 0.4 and MOCK.waypoint.opts.crazy, "стрелка TomTom")
+  end
+  ns.RefreshUI()
+  local shown = false
+  for _, fs in ipairs(MOCK.fontstrings) do
+    if fs._text:find("Шаг 2/6:", 1, true) and fs._text:find("Убить Lord Melenas", 1, true) then shown = true end
+  end
+  assert(shown, "шаг гида в окне")
+
+  MOCK.q1done = 1
+  MOCK.Fire("QUEST_LOG_UPDATE")
+  MOCK.Flush()
+  assert(char.guide.step == 3 and ns.guidePoint.x == 37, "после выполнения цели - к тому, кто принимает квест")
+
+  MOCK.Fire("QUEST_TURNED_IN", 932, 500)
+  MOCK.Flush()
+  assert(char.guide.step == 4 and ns.guidePoint.x == 33, "после сдачи - к явной точке")
+
+  -- Приход в точку: в modern расстояние даёт TomTom, в classic - размер карты
+  MOCK.tomtomDist = 10
+  MOCK.px, MOCK.py = 0.331, 0.401
+  MOCK.ticker()
+  assert(char.guide.step == 5, "приход в точку: " .. char.guide.step)
+
+  MOCK.level = 12
+  MOCK.Fire("PLAYER_LEVEL_UP", 12)
+  MOCK.Flush()
+  assert(char.guide.step == 6, "уровень 12")
+  assert(char.text:find("Гид: шаг 6/6 «Поговорить с хозяином таверны»", 1, true), "гид в снимке")
+
+  SlashCmdList.FOREVERCOACH("next")
+  assert(char.guide.step == 7 and ns.guidePoint == nil, "/fc next закрывает шаг без условия")
+  if MODE == "modern" then assert(MOCK.waypoint == nil, "стрелка убрана после конца гида") end
+  assert(MOCK.chat[#MOCK.chat]:find("Гид пройден", 1, true), "сообщение о конце гида")
+end
+
+-- Выход из игры: данные персонажа уже выгружены, последний полный снимок не должен затереться
+MOCK.unloaded = true
 MOCK.Fire("PLAYER_LOGOUT")
+assert(char.snap.bagTotal == 16 and #char.snap.gear.items == 3, "снимок затёрт при выходе")
+assert(char.history[#char.history].e == "LOGOUT" and char.text:find("LOGOUT", 1, true), "выход в истории")
 MOCK.AssertSerializable(ForeverCoachDB, "ForeverCoachDB")
 return char.text .. "\n--- самопроверка ---\n" .. char.selftest, table.concat(MOCK.chat, "\n")
 """

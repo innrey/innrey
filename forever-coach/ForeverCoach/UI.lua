@@ -116,6 +116,14 @@ function ns.RefreshUI()
   L[#L + 1] = Color("33ff99", "ForeverCoach") ..
     string.format("   ур. %d  %d%%   отдых %d%%%s", s.level, pct, rest, s.resting and " (таверна)" or "")
 
+  local gs = ns.GuideStatus and ns.GuideStatus()
+  if gs and gs.done then
+    L[#L + 1] = Color("33ff33", "Гид пройден - спроси Claude, куда дальше")
+  elseif gs then
+    L[#L + 1] = Color("ffd100", string.format("Шаг %d/%d: ", gs.step, gs.total)) .. gs.text
+    if gs.where then L[#L + 1] = "   " .. gs.where end
+  end
+
   local hs = s.hsHave and ns.Clock(s.hsCD) or "нет в сумках"
   if s.hsCD == 0 then hs = Color("33ff33", hs) end
   local line = "ХС: " .. hs .. " (" .. tostring(s.hsBind) .. ")"
