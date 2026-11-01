@@ -22,6 +22,22 @@ local function Plan()
 end
 ns.Plan = Plan
 
+-- Ошибки не роняют аддон: запоминаем их для /fc test и пишем в чат один раз
+ns.errors = {}
+local reportedErrors = {}
+function ns.SafeCall(fn, ...)
+  local ok, err = pcall(fn, ...)
+  if not ok then
+    err = tostring(err)
+    if not reportedErrors[err] then
+      reportedErrors[err] = true
+      table.insert(ns.errors, err)
+      Print("ошибка: " .. err .. " (/fc test - отчёт для Claude)")
+    end
+  end
+  return ok
+end
+
 ---------------------------------------------------------------------------
 -- Совместимость API: Classic Era, Forever и более новые клиенты
 ---------------------------------------------------------------------------
@@ -426,7 +442,7 @@ function ns.RequestUpdate()
   pending = true
   C_Timer.After(0.5, function()
     pending = false
-    ns.Update()
+    ns.SafeCall(ns.Update)
   end)
 end
 
@@ -454,7 +470,7 @@ function ns.Sync()
     Print("Синхронизация после боя.")
     return
   end
-  ns.Update()
+  ns.SafeCall(ns.Update)
   ReloadUI()
 end
 
@@ -485,8 +501,12 @@ local EVENTS = {
   "PLAYER_DEAD", "PLAYER_ALIVE", "PLAYER_UNGHOST", "CHARACTER_POINTS_CHANGED",
   "SPELLS_CHANGED", "UPDATE_SHAPESHIFT_FORMS", "HEARTHSTONE_BOUND",
 }
+ns.unsupportedEvents = {}
 for _, ev in ipairs(EVENTS) do
-  pcall(events.RegisterEvent, events, ev) -- в каком-то клиенте события может не быть
+  -- в каком-то клиенте события может не быть
+  if not pcall(events.RegisterEvent, events, ev) then
+    table.insert(ns.unsupportedEvents, ev)
+  end
 end
 
 events:SetScript("OnEvent", function(_, ev, ...)
@@ -498,9 +518,9 @@ events:SetScript("OnEvent", function(_, ev, ...)
     if not ns.db then InitDB() end
     InitChar()
     Hist("LOGIN")
-    ns.Update()
-    C_Timer.NewTicker(5, ns.Tick)
-    if ns.CreateUI then ns.CreateUI() end
+    ns.SafeCall(ns.Update)
+    C_Timer.NewTicker(5, function() ns.SafeCall(ns.Tick) end)
+    if ns.CreateUI then ns.SafeCall(ns.CreateUI) end
     if not Plan() then
       Print("Plan.lua не загрузился - проверь синтаксис файла. Аддон работает без плана.")
     end
@@ -508,7 +528,7 @@ events:SetScript("OnEvent", function(_, ev, ...)
   elseif ev == "PLAYER_LOGOUT" then
     if ns.char then
       Hist("LOGOUT")
-      ns.Update()
+      ns.SafeCall(ns.Update)
     end
     return
   elseif ev == "PLAYER_LEVEL_UP" then
@@ -547,6 +567,8 @@ SlashCmdList["FOREVERCOACH"] = function(msg)
     ForeverCoach_Copy()
   elseif cmd == "sync" then
     ns.Sync()
+  elseif cmd == "test" then
+    if ns.SelfTest then ns.SafeCall(ns.SelfTest) end
   elseif cmd == "lock" or cmd == "unlock" then
     ns.db.ui.locked = (cmd == "lock") or nil
     Print(cmd == "lock" and "Окно закреплено." or "Окно можно двигать.")
@@ -554,6 +576,6 @@ SlashCmdList["FOREVERCOACH"] = function(msg)
     ns.db.ui.point, ns.db.ui.relPoint, ns.db.ui.x, ns.db.ui.y = nil, nil, nil, nil
     Print("Позиция окна сброшена - сделай /reload.")
   else
-    Print("/fc - окно; /fc status - текст для Claude; /fc sync - сохранить и /reload; /fc lock|unlock; /fc reset")
+    Print("/fc - окно; /fc status - текст для Claude; /fc sync - сохранить и /reload; /fc test - самопроверка; /fc lock|unlock; /fc reset")
   end
 end

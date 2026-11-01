@@ -1,4 +1,4 @@
-## Interface: 11507
+## Interface: 11509
 ## Title: ForeverCoach
 ## Notes: Leveling coach: game-state snapshot for Claude and in-game hints. Read-only, no automation.
 ## Author: innrey
@@ -8,3 +8,4 @@
 Plan.lua
 Core.lua
 UI.lua
+Debug.lua

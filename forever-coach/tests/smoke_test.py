@@ -21,6 +21,7 @@ end
 if LOAD_PLAN then load("Plan.lua") end
 load("Core.lua")
 load("UI.lua")
+load("Debug.lua")
 
 MOCK.Fire("ADDON_LOADED", "ForeverCoach")
 MOCK.Fire("PLAYER_LOGIN")
@@ -100,9 +101,24 @@ SlashCmdList.FOREVERCOACH("help")
 SlashCmdList.FOREVERCOACH("sync")
 assert(MOCK.reloads == 1, "sync делает /reload")
 
+-- Самопроверка
+SlashCmdList.FOREVERCOACH("test")
+assert(char.selftest and char.selftest:find("интерфейс 11509", 1, true), "самопроверка: клиент")
+assert(char.selftest:find("Ошибки: нет", 1, true), "самопроверка: ошибок быть не должно")
+
+-- Ошибка в API не роняет аддон, а попадает в отчёт
+local realMoney = GetMoney
+GetMoney = function() error("boom") end
+MOCK.Fire("PLAYER_MONEY")
+MOCK.Flush()
+GetMoney = realMoney
+assert(#ns.errors == 1 and ns.errors[1]:find("boom", 1, true), "ошибка должна попасть в ns.errors")
+SlashCmdList.FOREVERCOACH("test")
+assert(char.selftest:find("boom", 1, true), "ошибка должна попасть в самопроверку")
+
 MOCK.Fire("PLAYER_LOGOUT")
 MOCK.AssertSerializable(ForeverCoachDB, "ForeverCoachDB")
-return char.text, table.concat(MOCK.chat, "\n")
+return char.text .. "\n--- самопроверка ---\n" .. char.selftest, table.concat(MOCK.chat, "\n")
 """
 
 

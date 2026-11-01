@@ -181,8 +181,11 @@ end
 ---------------------------------------------------------------------------
 -- Окно копирования статуса (для вставки в чат с Claude)
 ---------------------------------------------------------------------------
-function ns.ShowCopy()
-  ns.Update()
+function ns.ShowCopy(text)
+  if not text then
+    ns.SafeCall(ns.Update)
+    text = ns.char and ns.char.text or ""
+  end
   if not copyFrame then
     copyFrame = CreateFrame("Frame", "ForeverCoachCopyFrame", UIParent, Template())
     copyFrame:SetSize(560, 380)
@@ -215,7 +218,7 @@ function ns.ShowCopy()
 
     table.insert(UISpecialFrames, "ForeverCoachCopyFrame")
   end
-  copyBox:SetText(ns.char and ns.char.text or "")
+  copyBox:SetText(text)
   copyFrame:Show()
   copyBox:SetFocus()
   copyBox:HighlightText()

@@ -62,6 +62,8 @@ function hooksecurefunc(name, fn)
   _G[name] = function(...) orig(...); fn(...) end
 end
 
+function GetBuildInfo() return "1.15.9", "65000", "Jul 1 2026", 11509 end
+function GetLocale() return "ruRU" end
 function UnitName() return "Лунолист" end
 function GetRealmName() return "Forever" end
 function UnitClass() return "Друид", "DRUID" end
