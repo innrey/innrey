@@ -2,6 +2,14 @@
 
 Новые записи — сверху. Формат: дата — что узнали — ссылка.
 
+## 2026-11-02 — foreverchanges.pro: изменения друида 30 октября
+
+- Primal Bite и Shifting Power перенесены в 7-й ряд Силы зверя (с 40 ур.); откат Shifting Power 8 сек. Berserk и Improved Shifting Power убраны. Lacerate — талант 4-го ряда с новым 1-м рангом. Новый талант Predatory Discipline. Furor перенесён в Силу зверя, Heart of the Wild — в Исцеление. — https://foreverchanges.pro/buffs-and-nerfs , https://foreverchanges.pro/talents/druid
+- Свирепый укус: новый 1-й ранг у тренера на 24 (было 32). Полосование на 20 подтверждено. — https://foreverchanges.pro/spellbook/druid
+- Опыт 20→30 ≈ 331 800; мобы ниже уровня дают меньше (−3% за 1 ур., −17% за 5); квесты подземелий ≈ 2,2× Classic. — https://foreverchanges.pro/level-30
+- Cozy Sleeping Bag: +1% опыта за минуту в спальнике, до +3% на 2 часа, откат 1 час; цепочка по скрытым предметам с 14 ур. (Западный край, Степи, Когтистые горы, Лок Модан, Хилсбрад/Арати), в наградах сумки на 12 ячеек. — https://foreverchanges.pro/cozy-sleeping-bag
+- Цепочка кошки совпадает с гидом (The Great Cat Spirit → Blessings → To Darnassus, 2885 опыта суммарно). — https://foreverchanges.pro/druid-cat-form
+
 ## 2026-11-02 — разбор маршрута 1–30 и логистики (до запуска)
 
 - Медведь у ночного эльфа — классическая цепочка (Heeding the Call → Moonglade → Great Bear Spirit → Back to Darnassus → Body and Heart, Lunaclaw у Аубердина). Ur'endra — цепочка расы Skyborne. Прежняя запись была ошибкой. — https://forg.gg/en/forever/tips/druid-forms , https://www.icy-veins.com/wow-forever/druid-shapeshift-forms
