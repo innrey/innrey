@@ -45,6 +45,28 @@ else
   assert(s.quests[1].tag == nil, "без плана меток нет")
 end
 
+-- Экипировка, таланты, заклинания, навыки
+assert(#s.gear.items == 3 and #s.gear.empty == 14, "экипировка: " .. #s.gear.items .. "/" .. #s.gear.empty)
+local cap = s.gear.items[1]
+assert(cap.slot == "Голова" and cap.id == 90001 and cap.name == "Test Cap" and cap.q == 2 and cap.ilvl == 12, "шлем")
+local feral = s.talentTabs[2]
+assert(#s.talentTabs == 3 and feral.name == "Feral Combat" and feral.spent == 5, "дерево талантов")
+assert(#feral.list == 1 and feral.list[1].name == "Ferocity" and feral.list[1].max == 5, "вложенные таланты")
+assert(#s.spells[1].list == 1, "пассивка пропущена")
+local balance = s.spells[2]
+assert(balance.tab == "Balance" and #balance.list == 2, "Balance: старший ранг, без неизученных: " .. #balance.list)
+assert(balance.list[1].name == "Wrath" and balance.list[1].rank == 2, "старший ранг Wrath")
+if MODE == "classic" then
+  assert(s.skills[1].header == "Professions" and s.skills[1].list[1].rank == 45, "профессии")
+  assert(#s.skills[2].list == 0 and s.skills[3].collapsed, "доспехи пропущены, оружие свёрнуто")
+  assert(char.text:find("Навыки: Professions: Herbalism 45/75 | Weapon Skills: СВЁРНУТО", 1, true), "навыки в тексте")
+else
+  assert(#s.skills[1].list == 2 and s.skills[1].list[2].name == "Cooking", "профессии (modern)")
+end
+assert(char.text:find("Экипировка: Голова [90001] Test Cap (зелёный, iLvl 12)", 1, true), "экипировка в тексте")
+assert(char.text:find("Дерево талантов: Balance 0 | Feral Combat 5: Ferocity 5/5 | Restoration 0", 1, true), "таланты в тексте")
+assert(char.text:find("Balance: Wrath 2, Moonfire 1", 1, true), "заклинания в тексте")
+
 -- Квест выполнен -> сообщение в чат
 MOCK.q3done = 1
 MOCK.Fire("QUEST_LOG_UPDATE")
@@ -115,6 +137,16 @@ GetMoney = realMoney
 assert(#ns.errors == 1 and ns.errors[1]:find("boom", 1, true), "ошибка должна попасть в ns.errors")
 SlashCmdList.FOREVERCOACH("test")
 assert(char.selftest:find("boom", 1, true), "ошибка должна попасть в самопроверку")
+
+-- Сломанный раздел (другое API талантов) теряется один, остальной снимок цел
+local realTalentInfo = GetTalentInfo
+GetTalentInfo = function() error("talents api") end
+MOCK.Fire("CHARACTER_POINTS_CHANGED")
+MOCK.Flush()
+GetTalentInfo = realTalentInfo
+assert(#ns.errors == 2 and ns.errors[2]:find("talents api", 1, true), "ошибка раздела в ns.errors")
+assert(char.snap.talentTabs == nil and char.snap.gear and char.snap.spells, "пропал только раздел талантов")
+assert(char.text:find("Экипировка:", 1, true) and not char.text:find("Дерево талантов:", 1, true), "текст без талантов")
 
 MOCK.Fire("PLAYER_LOGOUT")
 MOCK.AssertSerializable(ForeverCoachDB, "ForeverCoachDB")

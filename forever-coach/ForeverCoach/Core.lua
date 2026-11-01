@@ -3,7 +3,7 @@
 -- Снимок попадает на диск (SavedVariables) при /reload, выходе из игры или /fc sync.
 local ADDON, ns = ...
 
-ns.VERSION = "0.1.0"
+ns.VERSION = "0.2.0"
 ns.FONT = "Fonts\\ARIALN.TTF" -- есть во всех клиентах и поддерживает кириллицу
 
 local HEARTHSTONE_ITEM = 6948
@@ -223,6 +223,153 @@ local function ReadQuests()
 end
 
 ---------------------------------------------------------------------------
+-- Экипировка, таланты, книга заклинаний, навыки
+---------------------------------------------------------------------------
+-- Раздел снимка: если API в клиенте другое, теряем только этот раздел, а не весь снимок
+local function Part(fn)
+  local out
+  ns.SafeCall(function() out = fn() end)
+  return out
+end
+
+local GEAR_SLOTS = {
+  { 1, "Голова" }, { 2, "Шея" }, { 3, "Плечи" }, { 15, "Спина" }, { 5, "Грудь" }, { 9, "Запястья" },
+  { 10, "Кисти" }, { 6, "Пояс" }, { 7, "Ноги" }, { 8, "Ступни" }, { 11, "Палец 1" }, { 12, "Палец 2" },
+  { 13, "Аксессуар 1" }, { 14, "Аксессуар 2" }, { 16, "Правая рука" }, { 17, "Левая рука" },
+  { 18, "Дальний бой/идол" },
+}
+
+local function ItemInfo(link)
+  local f = (C_Item and C_Item.GetItemInfo) or GetItemInfo
+  if f then return f(link) end
+end
+
+local function ReadGear()
+  if not GetInventoryItemLink then return nil end
+  local g = { items = {}, empty = {} }
+  for _, def in ipairs(GEAR_SLOTS) do
+    local link = GetInventoryItemLink("player", def[1])
+    if link then
+      local name, _, quality, ilvl = ItemInfo(link) -- пока предмет не в кэше клиента, придёт nil
+      g.items[#g.items + 1] = {
+        slot = def[2], id = tonumber(link:match("item:(%d+)")),
+        name = name or link:match("%[(.-)%]"), q = quality, ilvl = ilvl,
+      }
+    else
+      g.empty[#g.empty + 1] = def[2]
+    end
+  end
+  return g
+end
+
+-- Вложенные таланты. GetTalentTabInfo в Classic Era: name, icon, pointsSpent;
+-- в клиентах на движке Wrath и новее: id, name, description, icon, pointsSpent
+local function ReadTalents()
+  if not (GetNumTalentTabs and GetTalentTabInfo and GetNumTalents and GetTalentInfo) then return nil end
+  local tabs = {}
+  for tab = 1, (GetNumTalentTabs() or 0) do
+    local r1, r2 = GetTalentTabInfo(tab)
+    local t = { name = (type(r1) == "number") and r2 or r1, spent = 0, list = {} }
+    for i = 1, (GetNumTalents(tab) or 0) do
+      local name, _, _, _, rank, maxRank = GetTalentInfo(tab, i)
+      rank = tonumber(rank) or 0
+      if name and rank > 0 then
+        t.spent = t.spent + rank
+        t.list[#t.list + 1] = { name = name, rank = rank, max = tonumber(maxRank) or rank }
+      end
+    end
+    tabs[#tabs + 1] = t
+  end
+  return tabs
+end
+
+-- Книга заклинаний: старший изученный ранг каждого заклинания. Пассивки и ещё не изученные пропускаем.
+local function AddSpell(t, seen, name, sub)
+  if not name then return end
+  local rank = sub and tonumber(tostring(sub):match("(%d+)")) -- "Rank 3" / "Уровень 3"
+  local x = seen[name]
+  if not x then
+    x = { name = name }
+    seen[name] = x
+    t.list[#t.list + 1] = x
+  end
+  if rank and (not x.rank or rank > x.rank) then x.rank = rank end
+end
+
+local function ReadSpells()
+  local book = {}
+  if GetNumSpellTabs and GetSpellTabInfo and GetSpellBookItemName then
+    local BT = BOOKTYPE_SPELL or "spell"
+    for tab = 1, (GetNumSpellTabs() or 0) do
+      local tabName, _, offset, num = GetSpellTabInfo(tab)
+      offset, num = offset or 0, num or 0
+      local t, seen = { tab = tabName, list = {} }, {}
+      for i = offset + 1, offset + num do
+        if not (IsPassiveSpell and IsPassiveSpell(i, BT)) then
+          AddSpell(t, seen, GetSpellBookItemName(i, BT))
+        end
+      end
+      book[#book + 1] = t
+    end
+  elseif C_SpellBook and C_SpellBook.GetNumSpellBookSkillLines and C_SpellBook.GetSpellBookItemName then
+    local SB = C_SpellBook
+    local bank = Enum and Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player or 0
+    local future = Enum and Enum.SpellBookItemType and Enum.SpellBookItemType.FutureSpell
+    for line = 1, (SB.GetNumSpellBookSkillLines() or 0) do
+      local info = SB.GetSpellBookSkillLineInfo(line)
+      if info then
+        local t, seen = { tab = info.name, list = {} }, {}
+        for i = info.itemIndexOffset + 1, info.itemIndexOffset + info.numSpellBookItems do
+          local isFuture = future and SB.GetSpellBookItemType and SB.GetSpellBookItemType(i, bank) == future
+          local passive = SB.IsSpellBookItemPassive and SB.IsSpellBookItemPassive(i, bank)
+          if not isFuture and not passive then
+            AddSpell(t, seen, SB.GetSpellBookItemName(i, bank))
+          end
+        end
+        book[#book + 1] = t
+      end
+    end
+  else
+    return nil
+  end
+  return book
+end
+
+-- Навыки: профессии, вторичные навыки, владение оружием. Строки 1/1 (доспехи) пропускаем.
+local function ReadSkills()
+  if GetNumSkillLines and GetSkillLineInfo then
+    local out, cur = {}, nil
+    for i = 1, (GetNumSkillLines() or 0) do
+      local name, isHeader, isExpanded, rank, _, _, maxRank = GetSkillLineInfo(i)
+      if isHeader then
+        cur = { header = name, list = {}, collapsed = (not isExpanded) or nil }
+        out[#out + 1] = cur
+      elseif name and (tonumber(maxRank) or 0) > 1 then
+        if not cur then
+          cur = { header = "?", list = {} }
+          out[#out + 1] = cur
+        end
+        cur.list[#cur.list + 1] = { name = name, rank = tonumber(rank) or 0, max = tonumber(maxRank) or 0 }
+      end
+    end
+    return out
+  end
+  if GetProfessions and GetProfessionInfo then
+    local cur = { header = "Профессии", list = {} }
+    local idx = { GetProfessions() } -- prof1, prof2, archaeology, fishing, cooking; пустые = nil
+    for k = 1, 5 do
+      if idx[k] then
+        local name, _, rank, maxRank = GetProfessionInfo(idx[k])
+        if name then
+          cur.list[#cur.list + 1] = { name = name, rank = tonumber(rank) or 0, max = tonumber(maxRank) or 0 }
+        end
+      end
+    end
+    return { cur }
+  end
+end
+
+---------------------------------------------------------------------------
 -- Снимок состояния
 ---------------------------------------------------------------------------
 function ns.Collect()
@@ -309,6 +456,12 @@ function ns.Collect()
   end
   s.questsReady = ready
 
+  -- Экипировка, таланты, заклинания, навыки
+  s.gear = Part(ReadGear)
+  s.talentTabs = Part(ReadTalents)
+  s.spells = Part(ReadSpells)
+  s.skills = Part(ReadSkills)
+
   ns.state = s
   return s
 end
@@ -316,6 +469,8 @@ end
 ---------------------------------------------------------------------------
 -- Текст снимка: его читает Claude (из файла или из /fc status)
 ---------------------------------------------------------------------------
+local QUALITY = { [0] = "серый", [1] = "белый", [2] = "зелёный", [3] = "синий", [4] = "эпик", [5] = "легенд." }
+
 function ns.BuildText(s, history)
   local L = {}
   local function add(fmt, ...) L[#L + 1] = string.format(fmt, ...) end
@@ -347,6 +502,46 @@ function ns.BuildText(s, history)
       q.done and " ГОТОВ" or (q.failed and " ПРОВАЛЕН" or ""),
       q.tag and (" {" .. q.tag .. "}") or "",
       #objs > 0 and (" :: " .. table.concat(objs, "; ")) or "")
+  end
+  if s.gear then
+    local parts = {}
+    for _, it in ipairs(s.gear.items) do
+      parts[#parts + 1] = string.format("%s [%s] %s (%s, iLvl %s)", it.slot, tostring(it.id), tostring(it.name),
+        QUALITY[it.q] or "?", tostring(it.ilvl or "?"))
+    end
+    add("Экипировка: %s%s", #parts > 0 and table.concat(parts, "; ") or "ничего",
+      #s.gear.empty > 0 and (" | пусто: " .. table.concat(s.gear.empty, ", ")) or "")
+  end
+  if s.talentTabs then
+    local parts = {}
+    for _, t in ipairs(s.talentTabs) do
+      local list = {}
+      for _, x in ipairs(t.list) do list[#list + 1] = string.format("%s %d/%d", tostring(x.name), x.rank, x.max) end
+      parts[#parts + 1] = tostring(t.name) .. " " .. t.spent .. (#list > 0 and (": " .. table.concat(list, ", ")) or "")
+    end
+    add("Дерево талантов: %s", table.concat(parts, " | "))
+  end
+  if s.spells then
+    local parts = {}
+    for _, t in ipairs(s.spells) do
+      local list = {}
+      for _, x in ipairs(t.list) do list[#list + 1] = tostring(x.name) .. (x.rank and (" " .. x.rank) or "") end
+      if #list > 0 then parts[#parts + 1] = tostring(t.tab) .. ": " .. table.concat(list, ", ") end
+    end
+    add("Заклинания (старший ранг): %s", #parts > 0 and table.concat(parts, "; ") or "нет")
+  end
+  if s.skills then
+    local parts = {}
+    for _, h in ipairs(s.skills) do
+      local list = {}
+      for _, x in ipairs(h.list) do list[#list + 1] = string.format("%s %d/%d", tostring(x.name), x.rank, x.max) end
+      if h.collapsed then
+        parts[#parts + 1] = tostring(h.header) .. ": СВЁРНУТО"
+      elseif #list > 0 then
+        parts[#parts + 1] = tostring(h.header) .. ": " .. table.concat(list, ", ")
+      end
+    end
+    add("Навыки: %s", #parts > 0 and table.concat(parts, " | ") or "нет")
   end
   if history and #history > 0 then
     local parts = {}
@@ -500,6 +695,7 @@ local EVENTS = {
   "ZONE_CHANGED_NEW_AREA", "ZONE_CHANGED", "PLAYER_MONEY", "UPDATE_INVENTORY_DURABILITY",
   "PLAYER_DEAD", "PLAYER_ALIVE", "PLAYER_UNGHOST", "CHARACTER_POINTS_CHANGED",
   "SPELLS_CHANGED", "UPDATE_SHAPESHIFT_FORMS", "HEARTHSTONE_BOUND",
+  "PLAYER_EQUIPMENT_CHANGED", "SKILL_LINES_CHANGED",
 }
 ns.unsupportedEvents = {}
 for _, ev in ipairs(EVENTS) do

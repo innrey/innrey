@@ -92,8 +92,55 @@ function GetInventoryItemDurability(slot)
   if slot == 7 then return 70, 70 end
 end
 function GetNumShapeshiftForms() return 1 end
+
+-- Экипировка: надеты голова, грудь и посох, остальные 14 слотов пусты
+local GEAR = { [1] = 90001, [5] = 90002, [16] = 90003 }
+local ITEMS = {
+  [90001] = { "Test Cap", 2, 12 },
+  [90002] = { "Test Robe", 1, 5 },
+  [90003] = { "Test Staff", 3, 15 },
+}
+function GetInventoryItemLink(_, slot)
+  local id = GEAR[slot]
+  if id then return "|cffffffff|Hitem:" .. id .. "::::::::9:::::::|h[" .. ITEMS[id][1] .. "]|h|r" end
+end
 function GetItemInfo(link)
+  local it = ITEMS[tonumber(tostring(link):match("item:(%d+)"))]
+  if it then return it[1], link, it[2], it[3], 1, "Armor", "Cloth", 1, "", "icon", 10 end
   return "Junk", link, 0, 1, 1, "Junk", "Junk", 20, "", "icon", 25
+end
+
+-- Таланты: в Feral Combat вложено 5 очков
+local TALENTS = {
+  { "Balance", { { "Improved Wrath", 0, 5 } } },
+  { "Feral Combat", { { "Ferocity", 5, 5 }, { "Feral Instinct", 0, 5 } } },
+  { "Restoration", { { "Improved Mark of the Wild", 0, 5 } } },
+}
+function GetNumTalentTabs() return #TALENTS end
+function GetNumTalents(tab) return #TALENTS[tab][2] end
+function GetTalentInfo(tab, i)
+  local t = TALENTS[tab][2][i]
+  return t[1], "icon", 1, i, t[2], t[3]
+end
+function GetTalentTabInfo(tab)
+  local t = TALENTS[tab]
+  if MODE == "modern" then return 280 + tab, t[1], "desc", "icon", 0 end -- порядок как в Wrath и новее
+  return t[1], "icon", 0, "file"
+end
+
+-- Книга заклинаний: Wrath в двух рангах, одна пассивка; в modern ещё и не изученный Starfire
+local SPELLS = {
+  { "General", { { "Attack" }, { "Nature Resistance", "Racial Passive", passive = true } } },
+  { "Balance", { { "Wrath", "Rank 1" }, { "Wrath", "Rank 2" }, { "Moonfire", "Rank 1" }, { "Starfire", "Rank 1", future = true } } },
+  { "Feral Combat", { { "Bear Form", "Shapeshift" } } },
+}
+local BOOK, TABS = {}, {}
+for _, tab in ipairs(SPELLS) do
+  local offset = #BOOK
+  for _, sp in ipairs(tab[2]) do
+    if MODE == "modern" or not sp.future then BOOK[#BOOK + 1] = sp end
+  end
+  TABS[#TABS + 1] = { name = tab[1], offset = offset, num = #BOOK - offset }
 end
 
 -- Сумки: рюкзак на 16 слотов, 2 свободно, 3 серых предмета
@@ -137,6 +184,21 @@ if MODE == "modern" then
       end
     end,
   }
+  Enum = { SpellBookSpellBank = { Player = 0 }, SpellBookItemType = { Spell = 1, FutureSpell = 2 } }
+  C_SpellBook = {
+    GetNumSpellBookSkillLines = function() return #TABS end,
+    GetSpellBookSkillLineInfo = function(t)
+      return { name = TABS[t].name, itemIndexOffset = TABS[t].offset, numSpellBookItems = TABS[t].num }
+    end,
+    GetSpellBookItemName = function(i) return BOOK[i][1], BOOK[i][2] end,
+    GetSpellBookItemType = function(i) return BOOK[i].future and 2 or 1, 0 end,
+    IsSpellBookItemPassive = function(i) return BOOK[i].passive or false end,
+  }
+  function GetProfessions() return 1, nil, nil, nil, 2 end
+  function GetProfessionInfo(i)
+    if i == 1 then return "Herbalism", "icon", 45, 75 end
+    if i == 2 then return "Cooking", "icon", 10, 75 end
+  end
 else
   GetContainerNumFreeSlots = free
   GetContainerNumSlots = slots
@@ -158,6 +220,20 @@ else
     local o = QUESTS[i].obj[j]
     return o[1], "monster", o[2]
   end
+  function GetNumSpellTabs() return #TABS end
+  function GetSpellTabInfo(t) return TABS[t].name, "icon", TABS[t].offset, TABS[t].num end
+  function GetSpellBookItemName(i) return BOOK[i][1], BOOK[i][2] end
+  function IsPassiveSpell(i) return BOOK[i].passive and 1 or nil end
+  -- Навыки: доспехи 1/1 пропускаются, оружейные навыки свёрнуты
+  local SKILLS = {
+    { "Professions", true, true },
+    { "Herbalism", false, false, 45, 0, 0, 75 },
+    { "Armor Proficiencies", true, true },
+    { "Leather", false, false, 1, 0, 0, 1 },
+    { "Weapon Skills", true, false },
+  }
+  function GetNumSkillLines() return #SKILLS end
+  function GetSkillLineInfo(i) return unpack(SKILLS[i]) end
   -- Журнал квестов в стиле Classic: три видимые строки
   QUESTS_DISPLAYED = 3
   for n = 1, 3 do

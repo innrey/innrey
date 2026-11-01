@@ -48,6 +48,10 @@ function ns.SelfTest()
   add("API журнала квестов: %s", First("GetQuestLogTitle", "C_QuestLog.GetInfo"))
   add("API талантов: %s", First("UnitCharacterPoints", "GetUnspentTalentPoints"))
   add("API карты: %s", First("C_Map.GetBestMapForUnit"))
+  add("API экипировки: %s + %s", First("GetInventoryItemLink"), First("C_Item.GetItemInfo", "GetItemInfo"))
+  add("API дерева талантов: %s", First("GetTalentInfo"))
+  add("API книги заклинаний: %s", First("GetSpellBookItemName", "C_SpellBook.GetSpellBookItemName"))
+  add("API навыков: %s", First("GetSkillLineInfo", "GetProfessionInfo"))
   local hook
   if ns.questLogHooked then
     hook = "стоят (хук QuestLog_Update)"
@@ -76,6 +80,14 @@ function ns.SelfTest()
     for _, q in ipairs(s.quests) do if q.tag then tagged = tagged + 1 end end
     add("Квесты: %d, готово к сдаче %d, скрыто свёрнутыми %d, с метками %d",
       #s.quests, s.questsReady, s.questsHidden or 0, tagged)
+    local spent, spells, skills = 0, 0, 0
+    for _, t in ipairs(s.talentTabs or {}) do spent = spent + t.spent end
+    for _, t in ipairs(s.spells or {}) do spells = spells + #t.list end
+    for _, h in ipairs(s.skills or {}) do skills = skills + #h.list end
+    add("Экипировка: %s; талантов вложено: %s; заклинаний: %s; навыков: %s",
+      s.gear and string.format("надето %d, пусто %d", #s.gear.items, #s.gear.empty) or "НЕТ",
+      s.talentTabs and tostring(spent) or "НЕТ", s.spells and tostring(spells) or "НЕТ",
+      s.skills and tostring(skills) or "НЕТ")
   else
     add("Снимок: НЕТ")
   end

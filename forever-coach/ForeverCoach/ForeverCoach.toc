@@ -2,7 +2,7 @@
 ## Title: ForeverCoach
 ## Notes: Leveling coach: game-state snapshot for Claude and in-game hints. Read-only, no automation.
 ## Author: innrey
-## Version: 0.1.0
+## Version: 0.2.0
 ## SavedVariables: ForeverCoachDB
 
 Plan.lua
