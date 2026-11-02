@@ -2,6 +2,22 @@
 
 Новые записи — сверху. Формат: дата — что узнали — ссылка.
 
+## 2026-11-02 — форумы, YouTube, маршруты аддонов (ещё не внесено в маршрут)
+
+Полный список ссылок — `sources.md`, разделы 6–9.
+
+- RestedXP (бесплатные маршруты Forever 1–20, проверены в бете): ночной эльф идёт Темные берега 11–15 → корабль в Штормград → Лок Модан 15–16 → камнем в Аубердин → Темные берега 16–19 → Красногорье 19–20; поездка на 14 за излечением яда убрана («Removed in wowF»), Curing the Sick и Power over Poison закомментированы; с Лунной поляны летят в Аубердин у Sindrayl. — https://github.com/RestedXP/RXPGuides/tree/master/Guides/forever
+- The Absent Minded Prospector (943, Болотина): Stone of Relu падает с ящеров с шансом 1,5% — ловушка. — https://github.com/fitzforge/polestar/tree/next/guides/forever/alliance
+- Glowing Soul Gem (970) — с любых Dark Strand в Ясеневом лесу, шанс низкий; Elune's Tear (1033) — островок на озере Iris (~46.4, 46.4); чешуя для Crocs of the Sky — Crimson Whelps на востоке Болотины. — Polestar, RestedXP, warcraft.wiki.gg
+- Duskwood Mission I–XVIII — квесты Season of Discovery, в Forever не используются. — https://warcraft.wiki.gg/wiki/Field_Captain_Palandar
+- Реликвия для облика кошки (98396): в бете очереди 2–3 часа, «There is no loot» при одновременных кликах; исправление 1 октября не помогло, после 17 октября жалоб нет. — https://us.forums.blizzard.com/en/wow/t/2384231
+- После получения медведя навык Feral Combat почти с нуля: первые бои — много промахов по мобам своего уровня. — https://us.forums.blizzard.com/en/wow/t/2389162
+- Деньги: игроки беты — 9g к 20, 26g к 30, «денег всегда хватало». Цен тренеров никто не публиковал. — https://us.forums.blizzard.com/en/wow/t/2398327
+- Лунная поляна на PvP-серверах — спорная зона. Корабли: ~10 минут ожидания на остановке, на корабле меняется слой. Приглашение в группу в бою или в сопровождении меняет слой (квестовый моб пропадает). — https://us.forums.blizzard.com/en/wow/t/2354595 , https://us.forums.blizzard.com/en/wow/t/2365523 , https://us.forums.blizzard.com/en/wow/t/2359785
+- Удар медведя ≈ 2,5× DPS оружия, кошки ≈ 1×. Камни для оружия с 16, Wizard Oil раньше. — https://us.forums.blizzard.com/en/wow/t/2380676 , https://www.youtube.com/watch?v=fhGVx8Plwa4
+- Новые квесты, которых нет в гиде: Camping 101: Cooking (96634), продолжения Crown of the Earth (98046, 98065), Escaping Ban'ethil (99053), Expanding Horizons → Making Do (97914 → 97926, сумка Shipwright's Satchel — если едешь через Штормград).
+- Excavation Site: вход в Болотине 47,56; дебаффы снимает только жрец, паладин или шаман; награды квестов урезаны до зелёных (~10 окт.). — https://www.youtube.com/watch?v=KhARwalwIYo , https://us.forums.blizzard.com/en/wow/t/2378440
+
 ## 2026-11-02 — foreverchanges.pro: изменения друида 30 октября
 
 - Primal Bite и Shifting Power перенесены в 7-й ряд Силы зверя (с 40 ур.); откат Shifting Power 8 сек. Berserk и Improved Shifting Power убраны. Lacerate — талант 4-го ряда с новым 1-м рангом. Новый талант Predatory Discipline. Furor перенесён в Силу зверя, Heart of the Wild — в Исцеление. — https://foreverchanges.pro/buffs-and-nerfs , https://foreverchanges.pro/talents/druid

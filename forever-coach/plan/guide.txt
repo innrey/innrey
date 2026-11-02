@@ -53,6 +53,9 @@ turnin 96630
 accept 96606
 complete 96606 || Посиди у костра Lyreena до бафа Boosted Rest
 turnin 96606
+accept 96634 || Кулинария нужна для лагеря и еды с бонусом к опыту
+turnin 96634 | Сдай Camping 101: Cooking у Zarrin и выучи Кулинарию
+accept 4161 || Паучьи лапки - с пауков по ходу
 turnin 2159
 bind npc="Innkeeper Keldamyr" | Привяжи камень в Доланааре
 turnin 928
@@ -88,6 +91,8 @@ complete 2459
 complete 489 || Шишки у корней деревьев возле Fel Rock
 turnin 489
 turnin 2459
+complete 4161
+turnin 4161
 learn 339 npc="Kal" cost=4s | Обучение 8 ур.: Гнев корней, Целительное прикосновение 3
 
 # ===== Запад Тельдрассила 8-10 =====
@@ -192,11 +197,12 @@ accept 984
 accept 954
 accept 958
 accept 4811
+accept 2178 || Мясо долгоногов - по ходу
 complete 6001 || Пещера к востоку от Аубердина: Cenarion Moondust у камня, убей Lunaclaw, поговори с духом
 zone 1438 npc="Caylais Moonfeather" | Лети в Рут'теран (бесплатно) за обликом медведя
 turnin 6343
 zone 1457 | Портал наверх в Дарнас
-turnin 6001 | Сдай Body and Heart: облик медведя, Рык, Трёпка
+turnin 6001 | Сдай Body and Heart: облик медведя, Рык, Трёпка || Навык Feral Combat почти с нуля: первые бои - с мобами на 1-2 уровня ниже
 zone 1439 | Портал вниз и полёт в Аубердин (бесплатно)
 complete 983
 turnin 983
@@ -290,6 +296,8 @@ turnin 6123
 accept 6124 || 10 больных оленей - по ходу всей зоны
 turnin 947
 accept 948
+complete 2178
+turnin 2178
 turnin 4763
 complete 2138
 turnin 2138
@@ -346,21 +354,27 @@ level 20 | Добери 20 ур. рядом с Аубердином
 zone 1438 npc="Caylais Moonfeather" | Лети в Рут'теран (бесплатно)
 zone 1457 | Портал наверх в Дарнас
 accept 98393
+accept 26 || Водный облик: идол -40 маны на каждое превращение
 turnin 741
 accept 942 || Неси в Менетил
 learn 16864 npc="Mathrengyl Bearwalker" cost=1g | Обучение 20 ур.: Знамение ясности, Полосование и др. || Цена Знамения ясности и Полосования в Forever неизвестна - возьми запас
 zone 1450 | Телепорт: Лунная поляна
 turnin 6124
 accept 6125
+turnin 26
+accept 29
 turnin 98393
 accept 98394
 turnin 98394 || Дух кошки на юге Лунной поляны
 accept 98396
-complete 98396 || 3 реликвии в Stormrage Barrow Dens рядом; статуя у входа даёт незаметность
+complete 98396 || 3 реликвии в Stormrage Barrow Dens; статуя у входа даёт незаметность. Кликни один раз и жди полоску; если толпа - приходи позже
 turnin 98396
 accept 98731
 turnin 98731
 accept 98397
+complete 29 || Подними Shrine Bauble со дна озера Elune'ara и используй у Shrine of Remulos, пока не рассыпался
+turnin 29
+accept 272 || Половинки кулона: в море к северу от Аубердина и у побережья Западного края
 zone 1438 npc="Silva Fil'naveth" | Лети с Silva в Рут'теран (бесплатно)
 zone 1457 | Портал наверх в Дарнас
 turnin 98397 | Сдай To Darnassus: облик кошки, Царапина, Крадущийся зверь, Разорвать
@@ -371,6 +385,7 @@ zone 1439 | Назад в Аубердин: портал вниз и полёт 
 complete 87760 || Stormscale Beastmistress (48,13)
 complete 98013 || Руины Mathystra
 complete 951 || Руины Mathystra; обходи Baron Marinous (элита 21)
+goto @1439 48.9,11.3 | Половинка кулона водного облика: сундук в море к северу || Half Pendant of Aquatic Agility
 turnin 87760
 turnin 951
 turnin 98013
@@ -385,7 +400,7 @@ accept 970
 turnin 945
 accept 1010
 complete 1010
-complete 970
+complete 970 || Glowing Soul Gem падает с Dark Strand редко: если за 10 минут не выпал - /fc next
 turnin 1010
 accept 1020
 turnin 970
@@ -427,7 +442,6 @@ bind npc="Innkeeper Helbrek" | Привяжи камень в Менетиле
 
 # ===== Болотина 23-26 =====
 turnin 942
-accept 943
 turnin 98461
 accept 305
 accept 279
@@ -476,9 +490,7 @@ complete 294
 turnin 294
 accept 295
 accept 299
-complete 943
 complete 470 || Мешок Sida из слизней у Ironbeard's Tomb
-turnin 943
 turnin 469
 turnin 306
 turnin 98282
@@ -498,7 +510,10 @@ learn 199 npc="Buliwyf Stonehand" cost=10s | Выучи двуручные бу�
 zone 1453 | Трамвай из Тинкертауна в Штормград
 manual npc="Dungar Longdrink" | Открой точку полёта в Штормграде
 learn 1850 npc="Theridran" cost=2g25s | Обучение 26 ур.: Порыв, Устранение яда и др.
-zone 1431 | Иди на юг через Элвинн в Темнолесье
+zone 1436 | Иди на запад через Элвинн в Западный край
+manual npc="Thor" | Открой точку полёта Sentinel Hill
+goto @1436 17.9,33.2 | Половинка кулона водного облика: сундук в море к западу от Gold Coast Quarry || Half Pendant of Aquatic Endurance
+zone 1431 | На юго-восток в Сумеречный лес, дальше по дороге на восток в Темнолесье
 
 # ===== Темнолесье 26-29 =====
 manual npc="Felicia Maline" | Открой точку полёта в Темнолесье
@@ -586,9 +601,16 @@ complete 133
 turnin 133
 
 # ===== Болотина 28-30 =====
-zone 1453 npc="Felicia Maline" cost=3s30c | Лети в Штормград
-learn 2091 npc="Theridran" cost=3g50s | Обучение 28 ур.: Омоложение 5, Царапина 2 и др. || Можно не брать Вызывающий рёв и Съёживание
-zone 1437 npc="Dungar Longdrink" cost=3s80c | Лети в Менетил через Стальгорн
+zone 1450 | Телепорт: Лунная поляна - водный облик и обучение 28 (камень должен быть готов)
+complete 272 @1450 36.0,41.4 || Соедини половинки кулона у Shrine of Remulos
+turnin 272
+accept 5061
+zone 1438 npc="Silva Fil'naveth" | Лети с Silva в Рут'теран (бесплатно)
+zone 1457 | Портал наверх в Дарнас
+turnin 5061 | Сдай Aquatic Form: водный облик и Idol of Shifting Tides
+learn 2091 npc="Mathrengyl Bearwalker" cost=3g50s | Обучение 28 ур.: Омоложение 5, Царапина 2 и др. || Можно не брать Вызывающий рёв и Съёживание
+zone 1431 | Камень в Темнолесье
+zone 1437 npc="Felicia Maline" cost=7s10c | Лети в Менетил через Штормград и Стальгорн
 bind npc="Innkeeper Helbrek" | Привяжи камень в Менетиле
 accept 98072
 accept 98240
