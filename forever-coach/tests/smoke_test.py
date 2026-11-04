@@ -97,6 +97,24 @@ MOCK.Fire("QUEST_LOG_UPDATE")
 MOCK.Flush()
 assert(char.snap.questsReady == 1, "готово к сдаче")
 
+-- Взял квест с меткой skip -> сразу сообщение с причиной, а в окне - список «брось»
+if LOAD_PLAN then
+  table.insert(MOCK.quests, { title = "Oakenscowl", level = 9, id = 2499, obj = {} })
+  MOCK.Fire("QUEST_LOG_UPDATE")
+  MOCK.Flush()
+  local said = false
+  for _, m in ipairs(MOCK.chat) do
+    if m:find("Не нужен:", 1, true) and m:find("Oakenscowl - элита 9", 1, true) then said = true end
+  end
+  assert(said, "сообщение о ненужном квесте с причиной")
+  ns.RefreshUI()
+  local listed = false
+  for _, fs in ipairs(MOCK.fontstrings) do
+    if fs._text:find("Брось - не нужны", 1, true) and fs._text:find("Oakenscowl - элита 9", 1, true) then listed = true end
+  end
+  assert(listed, "причина в окне")
+end
+
 -- Уровень 10 -> веха из плана и запись в историю
 MOCK.level = 10
 MOCK.Fire("PLAYER_LEVEL_UP", 10)

@@ -1,0 +1,91 @@
+# Метки квестов для аддона: [SKIP] - брось, [?] - по желанию, [!] - важный.
+# Собирается в ForeverCoach/Plan.lua командой: python tools/build_tags.py
+#
+# Квесты из гида (plan/guide.txt) метку не получают - их делаем. Все остальные квесты
+# в зонах маршрута получают [SKIP] с причиной: подземелье, элита, профессия, высокий
+# уровень, зона проездом или «не по маршруту». Причину видно в окне аддона и в чате,
+# когда берёшь такой квест.
+#
+# zone <uiMapID> main|pass <мин>-<макс> | Название  - зоны маршрута и уровни, на которых ты там.
+#     main - зона, где качаемся; pass - проездом. Квесты, которые можно взять не выше <макс>.
+# skip <ID> | причина  - своя причина вместо автоматической
+# opt <ID> | когда стоит - по желанию, если по пути
+# key <ID> | почему    - важный (обычно уже в гиде)
+
+zone 1438 main 1-12 | Тельдрассил
+zone 1457 main 1-20 | Дарнас
+zone 1450 main 10-30 | Лунная поляна
+zone 1439 main 11-21 | Темные берега
+zone 1440 main 20-23 | Ясеневый лес
+zone 1437 main 23-30 | Болотина
+zone 1431 main 26-29 | Сумеречный лес
+zone 1432 pass 26-26 | Лок Модан
+zone 1426 pass 26-26 | Дун Морог
+zone 1455 pass 26-26 | Стальгорн
+zone 1453 pass 26-28 | Штормград
+zone 1429 pass 26-26 | Элвиннский лес
+zone 1436 pass 26-26 | Западный край
+
+# --- по желанию: если оказался рядом
+opt 98046 | Crown of the Earth (Drained Vessel): +150 репутации Дарнаса, если идёшь мимо храма Луны
+opt 98065 | Crown of the Earth (Moonwell Remnants): +150 репутации Дарнаса, сразу после 98046
+opt 99053 | Escaping Ban'ethil: сопровождение в Ban'ethil Barrow Den - только если ниже 11,5 и пещера пустая
+opt 2541 | The Sleeping Druid: Ban'ethil Barrow Den - только если ниже 11,5 и пещера пустая
+opt 2561 | Druid of the Claw: Ban'ethil Barrow Den - только если ниже 11,5 и пещера пустая
+opt 483 | The Relics of Wakening: Ban'ethil Barrow Den - только если пещера пустая
+opt 486 | Ursal the Mauler: после The Relics of Wakening, 1150 опыта
+opt 2098 | Gyromast's Retrieval: детали ключа на дальнем севере Темных берегов, сдать Gelkak (56.6, 13.6)
+opt 4722 | Выброшенная на берег черепаха: сдать Gwennyth в Аубердине, если по пути
+opt 4723 | Выброшенное на берег существо: сдать Gwennyth в Аубердине, если по пути
+opt 4725 | Выброшенная на берег черепаха: сдать Gwennyth в Аубердине, если по пути
+opt 4727 | Выброшенная на берег черепаха: сдать Gwennyth в Аубердине, если по пути
+opt 4728 | Выброшенное на берег существо: сдать Gwennyth в Аубердине, если по пути
+opt 4730 | Выброшенное на берег существо: сдать Gwennyth в Аубердине, если по пути
+opt 4731 | Выброшенная на берег черепаха: сдать Gwennyth в Аубердине, если по пути
+opt 4732 | Выброшенная на берег черепаха: сдать Gwennyth в Аубердине, если по пути
+opt 4733 | Выброшенное на берег существо: сдать Gwennyth в Аубердине, если по пути
+opt 97914 | Expanding Horizons: письмо в Штормград - сдашь на 26, когда будешь там (опыта мало)
+opt 1016 | Elemental Bracers: Silverwind Refuge, если тебе 23+ и проходишь мимо
+opt 1017 | Mage Summoner: после Elemental Bracers, если тебе 23+
+opt 98190 | A Friend of the Family: сдать Болвару в Штормграде на 26 - по пути
+opt 98230 | This Land Was Their Land: на 29-30, если до корабля остаётся время (ведёт к Howin)
+opt 98291 | Death to the Dragonmaw: на 30, если до корабля остаётся время (3050 опыта)
+opt 98293 | Forced Disarmament: на 30, Dragonmaw Armaments у Angerfang (2450 опыта)
+
+# --- не нужны: своя причина
+skip 932 | Twisted Hatred: Fel Rock - давка, Lord Melenas прыгает по пещере; долго за мало опыта
+skip 98403 | Twisted Hatred, часть 2: Xethorr the Wicked - элита 12
+skip 2499 | Oakenscowl: элита 9 и крюк к озеру
+skip 927 | The Moss-twined Heart: сдать по маршруту не получится - брось
+skip 2399 | The Sprouted Fronds: 85 опыта
+skip 98028 | Baron Marinous: элита 21 в руинах Mathystra
+skip 2139 | Tharnariun's Hope: Den Mother - групповой
+skip 2078 | Gyromast's Revenge: сопровождение элитного робота, награда маленькая
+skip 1141 | The Family and the Fishing Pole: рыбалка
+skip 1009 | Ruuzel: групповой (элита с охраной)
+skip 973 | The Tower of Althalaxx, часть 5: 24 ур. - уйдёшь из Ясеневого леса раньше
+skip 943 | The Absent Minded Prospector: Stone of Relu падает с шансом 1,5%, награды друиду не подходят
+skip 98815 | Highland Hides: квест подземелья Excavation Site - только с группой
+skip 55 | Morbent Fel: элита 32
+skip 228 | Mor'Ladim: элита 35
+skip 66 | The Legend of Stalvan: цепочка по всему миру - не по маршруту
+skip 5923 | Heeding the Call: этот же квест бери у Kal в Доланааре (5925)
+skip 5924 | Heeding the Call: этот же квест бери у Kal в Доланааре (5925)
+skip 995 | Escape Through Stealth: бери вместо него Escape Through Force - опыта больше
+skip 1056 | Journey to Stonetalon Peak: Когтистые горы - не по маршруту
+skip 1070 | On Guard in Stonetalon: Когтистые горы - не по маршруту
+skip 1134 | Pridewings of Stonetalon: Когтистые горы - не по маршруту
+skip 289 | The Cursed Crew: Captain Halyndor - элита
+skip 290 | Lifting the Curse: Captain Halyndor - элита
+skip 292 | The Eye of Paleth: цепочка с элитой Captain Halyndor
+skip 293 | Cleansing the Eye: цепочка с элитой Captain Halyndor
+skip 465 | Nek'rosh's Gambit: элита 32 в Grim Batol
+skip 474 | Defeat Nek'rosh: элита 32
+skip 472 | Fall of Dun Modr: Dun Modr - элита
+skip 631 | The Thandol Span: элита на мосту
+skip 632 | The Thandol Span: элита на мосту
+skip 633 | The Thandol Span: элита на мосту
+skip 634 | Plea To The Alliance: цепочка Thandol Span - элита
+skip 87491 | Spark of Freedom: сопровождение в Dun Modr (32 ур.) - уйдёшь раньше
+skip 88756 | Bring Back a Bang: 32 ур. - уйдёшь раньше
+skip 98209 | Bloom of the Heavens, часть 2: сдаётся в Аубердине - не по пути

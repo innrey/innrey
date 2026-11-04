@@ -177,11 +177,13 @@ function ns.RefreshUI()
 
   local skips = {}
   for _, q in ipairs(s.quests) do
-    if q.tag == "skip" then skips[#skips + 1] = tostring(q.title) end
+    if q.tag == "skip" then skips[#skips + 1] = ns.TagText(q) end
   end
   if #skips > 0 then
     L[#L + 1] = " "
-    L[#L + 1] = Color("ff7777", "Можно бросить: ") .. table.concat(skips, ", ")
+    L[#L + 1] = Color("ff7777", "Брось - не нужны:")
+    for i = 1, math.min(#skips, 6) do L[#L + 1] = "  " .. skips[i] end
+    if #skips > 6 then L[#L + 1] = "  ... и ещё " .. (#skips - 6) end
   end
 
   body:SetText(table.concat(L, "\n"))

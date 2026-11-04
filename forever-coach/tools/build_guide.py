@@ -216,7 +216,15 @@ def main() -> int:
         return 1
     start = plan.index("\n", start) + 1
     PLAN.write_text(plan[:start] + lua + "\n  " + plan[end:], encoding="utf-8")
-    print(f"Гид записан в Plan.lua: {n} шагов. Проверь: python tests/check_plan.py")
+    print(f"Гид записан в Plan.lua: {n} шагов.")
+    # квесты из гида не должны оставаться с меткой skip - метки пересобираем вместе с гидом
+    from build_tags import update_plan  # noqa: E402 (build_tags сам импортирует этот модуль)
+    try:
+        print(update_plan(builder.db, builder))
+    except SpecError as e:
+        print("Ошибка в plan/tags.txt:\n" + str(e))
+        return 1
+    print("Проверь: python tests/check_plan.py")
     return 0
 
 

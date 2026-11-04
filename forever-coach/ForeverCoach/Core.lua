@@ -149,6 +149,14 @@ function ns.TagFor(id, title)
   return check(P.key, P.keyTitle, "key")
 end
 
+-- «Название - причина» для окна и чата. Причины в Plan.lua начинаются с английского
+-- названия («Oakenscowl: элита...») - на английском клиенте не повторяем его дважды.
+function ns.TagText(q)
+  local title, why = tostring(q.title), tostring(q.why or "")
+  if why:sub(1, #title + 2) == title .. ": " then why = why:sub(#title + 3) end
+  return why ~= "" and (title .. " - " .. why) or title
+end
+
 function ns.PlanNow(s)
   local P = Plan()
   if not P or type(P.now) ~= "table" then return nil end
@@ -886,11 +894,20 @@ function ns.CheckAlerts(prev, s)
   end
 
   if prev and prev.quests then
-    local was = {}
-    for _, q in ipairs(prev.quests) do if q.done and q.id then was[q.id] = true end end
+    local was, had = {}, {}
+    for _, q in ipairs(prev.quests) do
+      if q.id then had[q.id] = true end
+      if q.done and q.id then was[q.id] = true end
+    end
     for _, q in ipairs(s.quests) do
       if q.done and q.id and not was[q.id] then
         Print("Выполнено: " .. tostring(q.title) .. string.format(" (готово к сдаче: %d)", s.questsReady))
+      end
+      -- только что взятый квест с меткой: сразу сказать, нужен ли он
+      if q.id and not had[q.id] and q.tag == "skip" then
+        Print("|cffff5555Не нужен:|r " .. ns.TagText(q) .. ". Брось его в журнале.")
+      elseif q.id and not had[q.id] and q.tag == "opt" then
+        Print("|cffffd100По желанию:|r " .. ns.TagText(q))
       end
     end
   end

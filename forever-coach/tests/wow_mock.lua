@@ -247,6 +247,7 @@ local QUESTS = {
   { title = "Cleansing of the Infected", level = 14, id = 2138, obj = { { "Rabid Thistle Bear: 3/20", false } } },
   { title = "Flight to Auberdine", level = 10, id = 6342, obj = {} },
 }
+MOCK.quests = QUESTS -- тест может «взять» новый квест
 
 if MODE == "modern" then
   C_Container = {
